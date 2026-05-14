@@ -193,3 +193,16 @@ eod: end-of-day funnel update <YYYY-MM-DD>
 
 - Hablar siempre **en español** con el usuario
 - Commits y comentarios en código: **en inglés**
+
+---
+
+## Idioma del contenido del dashboard
+
+Todo el contenido visible del dashboard (notas en expandibles, status badges, next action, KPI labels, headers de tablas) va **siempre en inglés**, porque el destinatario principal (Nishil Patel) trabaja en inglés y lee el dashboard directamente.
+
+**Regla**: Cuando agregues o modifiques cualquier texto que termine renderizado en el HTML, escríbelo directamente en inglés, **sin pedir confirmación**. El usuario (Sebastián) te hablará en español en el chat — eso es solo el canal de comunicación, no refleja el idioma del dashboard.
+
+**Excepciones**: Solo los nombres propios van en su forma original:
+- Nombres de clientes (ej. "Armando Castro", "Javier Lemus")
+- Nombres de IBs (ej. "Álvaro Cuartas", "Sergio Monroy")
+- Ciudades y países (ej. "Bogotá", "Colombia", "Bolivia")
