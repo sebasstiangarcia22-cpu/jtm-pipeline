@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JT Markets — LATAM Pipeline</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f0f2f5; color: #1a1a2e; font-size: 12px; }
+
+/* HEADER */
+.header { background: #1a1a2e; color: white; padding: 10px 20px; display: flex; align-items: center; justify-content: space-between; }
+.header-title { font-size: 14px; font-weight: 700; }
+.header-meta { font-size: 10px; color: #a0aec0; text-align: right; }
+
+/* KPI BAR */
+.kpi-bar { display: flex; gap: 0; background: white; border-bottom: 1px solid #e2e8f0; }
+.kpi { flex: 1; text-align: center; padding: 8px 6px; border-right: 1px solid #f0f2f5; }
+.kpi:last-child { border-right: none; }
+.kpi-val { font-size: 15px; font-weight: 800; color: #1a1a2e; }
+.kpi-lbl { font-size: 9px; color: #718096; text-transform: uppercase; letter-spacing: 0.4px; margin-top: 1px; }
+
+/* TABS */
+.tabs { display: flex; background: white; border-bottom: 1px solid #e2e8f0; padding: 0 16px; gap: 2px; }
+.tab { padding: 8px 14px; cursor: pointer; font-size: 11px; font-weight: 600; color: #718096; border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap; }
+.tab:hover { color: #1a1a2e; }
+.tab.active { color: #1a1a2e; border-bottom-color: #1a1a2e; }
+
+/* CONTENT */
+.content { padding: 14px 20px; overflow: auto; height: calc(100vh - 108px); }
+.panel { display: none; }
+.panel.active { display: block; }
+
+/* MONTH CARDS */
+.month-grid { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+.month-card { background: white; border-radius: 6px; padding: 10px 14px; min-width: 110px; border-top: 3px solid #e2e8f0; flex: 1; }
+.month-card.active-month { border-top-color: #f6ad55; }
+.month-card.best-month { border-top-color: #48bb78; }
+.month-card.future { background: #fafbfc; border: 1px dashed #e2e8f0; border-top: 3px dashed #e2e8f0; }
+.mc-label { font-size: 9px; font-weight: 700; color: #718096; text-transform: uppercase; letter-spacing: 0.5px; }
+.mc-amount { font-size: 17px; font-weight: 800; color: #1a1a2e; margin: 3px 0 2px; }
+.mc-amount.future-amt { color: #cbd5e0; }
+.mc-meta { font-size: 9px; color: #718096; }
+.mc-ftd { font-size: 9px; font-weight: 700; color: #4299e1; margin-top: 2px; }
+
+/* STATS ROW */
+.stats-row { display: flex; gap: 8px; margin-bottom: 14px; }
+.stat-box { background: white; border-radius: 6px; padding: 10px 14px; flex: 1; text-align: center; border: 1px solid #e2e8f0; }
+.stat-val { font-size: 20px; font-weight: 800; color: #1a1a2e; }
+.stat-lbl { font-size: 9px; color: #718096; text-transform: uppercase; letter-spacing: 0.4px; margin-top: 2px; }
+
+/* SECTION TITLE */
+.section-title { font-size: 10px; font-weight: 700; color: #718096; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 8px; }
+
+/* PERIOD FILTER */
+.period-filter { display: flex; align-items: center; gap: 5px; margin-bottom: 10px; }
+.period-lbl { font-size: 9px; font-weight: 700; color: #a0aec0; text-transform: uppercase; letter-spacing: 0.5px; margin-right: 2px; }
+.period-btn { padding: 3px 10px; border: 1px solid #e2e8f0; background: white; border-radius: 12px; font-size: 10px; font-weight: 600; color: #718096; cursor: pointer; transition: all 0.12s; }
+.period-btn:hover { border-color: #1a1a2e; color: #1a1a2e; }
+.period-btn.active { background: #1a1a2e; color: white; border-color: #1a1a2e; }
+
+/* TABLES */
+table { width: 100%; border-collapse: collapse; background: white; border-radius: 6px; overflow: hidden; border: 1px solid #e2e8f0; font-size: 11px; margin-bottom: 16px; }
+thead th { background: #1a1a2e; color: white; padding: 7px 10px; text-align: left; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; white-space: nowrap; }
+tbody td { padding: 6px 10px; border-bottom: 1px solid #f0f2f5; color: #2d3748; white-space: nowrap; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover td { background: #f7fafc; }
+tbody tr:nth-child(even) td { background: #fafbfc; }
+tbody tr:nth-child(even):hover td { background: #f0f4f8; }
+.total-row td { background: #f0f4f8 !important; font-weight: 700; color: #1a1a2e; }
+
+/* BADGE */
+.badge { display: inline-block; padding: 2px 7px; border-radius: 10px; font-size: 9px; font-weight: 700; white-space: nowrap; }
+.b-red { background: #fed7d7; color: #c53030; }
+.b-orange { background: #feebc8; color: #c05621; }
+.b-green { background: #c6f6d5; color: #276749; }
+.b-blue { background: #bee3f8; color: #2b6cb0; }
+.b-gray { background: #e2e8f0; color: #4a5568; }
+.b-purple { background: #e9d8fd; color: #6b46c1; }
+.b-yellow { background: #fefcbf; color: #744210; }
+
+/* DOT STATUS */
+.dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 5px; }
+.dot-red { background: #e53e3e; }
+.dot-orange { background: #ed8936; }
+.dot-green { background: #38a169; }
+.dot-blue { background: #3182ce; }
+.dot-gray { background: #a0aec0; }
+.dot-yellow { background: #d69e2e; }
+
+/* BAR */
+.bar-wrap { display: inline-block; width: 80px; height: 4px; background: #e2e8f0; border-radius: 4px; vertical-align: middle; margin-left: 6px; }
+.bar-fill { height: 4px; background: #1a1a2e; border-radius: 4px; display: block; }
+
+/* EXPANDABLE NOTES */
+.notes-toggle { cursor: pointer; color: #a0aec0; font-size: 12px; padding: 0 4px; user-select: none; }
+.notes-toggle:hover { color: #1a1a2e; }
+.notes-row { display: none; }
+.notes-content { padding: 6px 10px 8px 20px; font-size: 10px; color: #718096; background: #fafbfc; border-top: 1px solid #f0f2f5; white-space: normal; line-height: 1.5; max-width: 600px; }
+
+/* SEARCH */
+.search-bar { display: flex; align-items: center; margin-bottom: 8px; gap: 8px; }
+.search-input { padding: 5px 10px; border: 1px solid #e2e8f0; border-radius: 5px; font-size: 11px; width: 200px; outline: none; }
+.search-input:focus { border-color: #1a1a2e; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-title">JT Markets — LATAM Pipeline</div>
+  <div class="header-meta">GM: Sebastián García &nbsp;·&nbsp; Updated May 14, 2026</div>
+</div>
+
+<!-- KPI BAR -->
+<div class="kpi-bar">
+  <div class="kpi"><div class="kpi-val">$21,727</div><div class="kpi-lbl">Total Deposited</div></div>
+  <div class="kpi"><div class="kpi-val">$797</div><div class="kpi-lbl">May So Far</div></div>
+  <div class="kpi"><div class="kpi-val">12</div><div class="kpi-lbl">Total FTDs</div></div>
+  <div class="kpi"><div class="kpi-val">$200K</div><div class="kpi-lbl">May Target</div></div>
+  <div class="kpi"><div class="kpi-val">$530K+</div><div class="kpi-lbl">Pipeline Potential</div></div>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <div class="tab active" onclick="showTab('deposits', this)">Deposits</div>
+  <div class="tab" onclick="showTab('ib', this)">IB Funnel</div>
+  <div class="tab" onclick="showTab('bdm', this)">BDM Pipeline</div>
+  <div class="tab" onclick="showTab('asm', this)">Account Sales Manager — Cristian</div>
+</div>
+
+<div class="content">
+
+  <!-- ═══════════════════ DEPOSITS TAB ═══════════════════ -->
+  <div id="tab-deposits" class="panel active">
+
+    <!-- Month Cards -->
+    <div class="month-grid">
+      <div class="month-card">
+        <div class="mc-label">Feb 2026</div>
+        <div class="mc-amount">$3,000</div>
+        <div class="mc-meta">4 deposits</div>
+        <div class="mc-ftd">4 FTDs</div>
+      </div>
+      <div class="month-card">
+        <div class="mc-label">Mar 2026</div>
+        <div class="mc-amount">$2,080</div>
+        <div class="mc-meta">7 deposits</div>
+        <div class="mc-ftd">5 FTDs</div>
+      </div>
+      <div class="month-card best-month">
+        <div class="mc-label">Apr 2026</div>
+        <div class="mc-amount">$15,850</div>
+        <div class="mc-meta">13 deposits</div>
+        <div class="mc-ftd">2 FTDs</div>
+      </div>
+      <div class="month-card active-month">
+        <div class="mc-label">May 2026 🔄</div>
+        <div class="mc-amount">$797</div>
+        <div class="mc-meta">2 deposits</div>
+        <div class="mc-ftd">1 FTD</div>
+      </div>
+      <div class="month-card future">
+        <div class="mc-label">Jun</div>
+        <div class="mc-amount future-amt">—</div>
+        <div class="mc-meta" style="color:#e2e8f0;">—</div>
+      </div>
+      <div class="month-card future">
+        <div class="mc-label">Jul–Dec</div>
+        <div class="mc-amount future-amt">—</div>
+        <div class="mc-meta" style="color:#e2e8f0;">—</div>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-row">
+      <div class="stat-box"><div class="stat-val">12</div><div class="stat-lbl">Total FTDs (all time)</div></div>
+      <div class="stat-box"><div class="stat-val">26</div><div class="stat-lbl">Total deposits</div></div>
+      <div class="stat-box"><div class="stat-val">2.17x</div><div class="stat-lbl">Avg deposits per client</div></div>
+      <div class="stat-box"><div class="stat-val">$835</div><div class="stat-lbl">Avg deposit size</div></div>
+    </div>
+
+    <!-- Ranking by Commercial -->
+    <div class="section-title">Ranking by Commercial</div>
+    <div class="period-filter">
+      <span class="period-lbl">Period:</span>
+      <button class="period-btn active" onclick="filterRanking('all', this)">All Time</button>
+      <button class="period-btn" onclick="filterRanking('2026', this)">2026</button>
+      <button class="period-btn" onclick="filterRanking('Feb', this)">Feb</button>
+      <button class="period-btn" onclick="filterRanking('Mar', this)">Mar</button>
+      <button class="period-btn" onclick="filterRanking('Apr', this)">Apr</button>
+      <button class="period-btn" onclick="filterRanking('May', this)">May</button>
+    </div>
+    <div id="ranking-container"></div>
+
+    <!-- Deposit Register -->
+    <div class="section-title">Full Deposit Register</div>
+    <div class="search-bar">
+      <input class="search-input" id="dep-search" type="text" placeholder="Search deposits..." oninput="searchDeposits(this.value)">
+    </div>
+    <table id="dep-table">
+      <thead>
+        <tr>
+          <th>#</th><th>Date</th><th>Month</th><th>ASM / BDM</th><th>Client</th>
+          <th>FTD</th><th>Source</th><th>Country</th><th>Amount</th>
+        </tr>
+      </thead>
+      <tbody id="dep-body"></tbody>
+    </table>
+  </div>
+
+  <!-- ═══════════════════ IB FUNNEL ═══════════════════ -->
+  <div id="tab-ib" class="panel">
+    <table>
+      <thead>
+        <tr><th>#</th><th>Name</th><th>Owner</th><th>Direct Clients</th><th>Country</th><th>Potential</th><th>Status</th><th>Next Action</th><th>Notes</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>1</td>
+          <td>⭐ Álvaro Cuartas</td>
+          <td><span class="badge b-blue">Sebastián</span></td>
+          <td>Active traders</td>
+          <td>Colombia</td>
+          <td>$10K–$20K</td>
+          <td><span class="dot dot-red"></span><span class="badge b-red">HOT</span></td>
+          <td>Escalate free swap NOW</td>
+          <td><span class="notes-toggle" onclick="toggleNote(this)">›</span></td>
+        </tr>
+        <tr class="notes-row"><td colspan="9"><div class="notes-content">Condition: Free Swap not yet approved internally. This is the only blocker. High-value IB — escalate to risk team within 24h.</div></td></tr>
+        <tr>
+          <td>2</td>
+          <td>⭐ Sergio Monroy</td>
+          <td><span class="badge b-blue">Sebastián</span></td>
+          <td>$100K+/qtr book</td>
+          <td>LATAM</td>
+          <td>$100K+/qtr</td>
+          <td><span class="dot dot-orange"></span><span class="badge b-orange">Active</span></td>
+          <td>Confirm Bogotá meeting</td>
+          <td><span class="notes-toggle" onclick="toggleNote(this)">›</span></td>
+        </tr>
+        <tr class="notes-row"><td colspan="9"><div class="notes-content">Requested in-person meeting in Bogotá. High potential. Confirm date this week.</div></td></tr>
+        <tr>
+          <td>3</td>
+          <td>⭐ Dionisio Sifontes</td>
+          <td><span class="badge b-blue">Sebastián</span></td>
+          <td>Copy trading followers</td>
+          <td>LATAM</td>
+          <td>Massive vol.</td>
+          <td><span class="dot dot-orange"></span><span class="badge b-orange">Re-engaging</span></td>
+          <td>Aggressive outreach</td>
+          <td><span class="notes-toggle" onclick="toggleNote(this)">›</span></td>
+        </tr>
+        <tr class="notes-row"><td colspan="9"><div class="notes-content">Copy trading strategy is live. Re-engage with copy trading angle — this could drive significant volume.</div></td></tr>
+        <tr>
+          <td>4</td>
+          <td>⭐ Alexis Aguilar</td>
+          <td><span class="badge b-blue">Sebastián</span></td>
+          <td>LATAM network</td>
+          <td>LATAM</td>
+          <td>$100K–$200K</td>
+          <td><span class="dot dot-orange"></span><span class="badge b-orange">Active push</span></td>
+          <td>Recontact this week</td>
+          <td><span class="notes-toggle" onclick="toggleNote(this)">›</span></td>
+        </tr>
+        <tr class="notes-row"><td colspan="9"><div class="notes-content">Strong LATAM network. High conviction. Recontact this week.</div></td></tr>
+        <tr>
+          <td>5</td>
+          <td>Dan</td>
+          <td><span class="badge b-blue">Sebastián</span></td>
+          <td>Influencer network</td>
+          <td>LATAM</td>
+          <td>$100K+/qtr</td>
+          <td><span class="dot dot-orange"></span><span class="badge b-orange">Negotiating</span></td>
+          <td>Advance deal</td>
+          <td><span class="notes-toggle" onclick="toggleNote(this)">›</span></td>
+        </tr>
+        <tr class="notes-row"><td colspan="9"><div class="notes-content">May 13: introductions to new influencers in his network. Deal advancing — influencer intros ongoing.</div></td></tr>
+        <tr>
+          <td>6</td>
+          <td>Christian Farfan</td>
+          <td><span class="badge b-blue">Sebastián</span></td>
+          <td>LATAM book</td>
+          <td>LATAM</td>
+          <td>$100K+/qtr</td>
+          <td><span class="dot dot-orange"></span><span class="badge b-orange">Call scheduled</span></td>
+          <td>Call this week</td>
+          <td><span class="notes-toggle" onclick="toggleNote(this)">›</span></td>
+        </tr>
+        <tr class="notes-row"><td colspan="9"><div class="notes-content">Call scheduled for this week. Warm lead.</div></td></tr>
+        <tr>
+          <td>7</td>
+          <td>Mariano — Trading Emergente</td>
+          <td><span class="badge b-blue">Sebastián</span></td>
+          <td>ARG/Medellín community</td>
+          <td>ARG/COL</td>
+          <td>TBD</td>
+          <td><span class="dot dot-orange"></span><span class="badge b-orange">Meeting sched.</span></td>
+          <td>Follow up post-FMC</td>
+          <td><span class="notes-toggle" onclick="toggleNote(this)">›</span></td>
+        </tr>
+        <tr class="notes-row"><td colspan="9"><div class="notes-content">May 13: FMC presented to Mariano. Follow up this week on next steps.</div></td></tr>
+        <tr>
+          <td>8</td>
+          <td>Keylin Masis</td>
+          <td><span class="badge b-blue">Sebastián</span></td>
+          <td>LATAM</td>
+          <td>LATAM</td>
+          <td>TBD</td>
+          <td><span class="dot dot-orange"></span><span class="badge b-orange">Meeting sched.</span></td>
+          <td>Meeting this week</td>
+          <td><span class="notes-toggle" onclick="toggleNote(this)">›</span></td>
+        </tr>
+        <tr class="notes-row"><td colspan="9"><div class="notes-content">Meeting scheduled for this week.</div></td></tr>
+        <tr>
+          <td>9</td>
+          <td>Carol Rodriguez</td>
+          <td><span class="badge b-blue">Sebastián</span></td>
+          <td>Jaime (HOT)</td>
+          <td>LATAM</td>
+          <td>$10K+ pipeline</td>
+          <td><span class="dot dot-green"></span><span class="badge b-green">Generating</span></td>
+          <td>Push Jaime close</td>
+          <td><span class="notes-toggle" onclick="toggleNote(this)">›</span></td>
+        </tr>
+        <tr class="notes-row"><td colspan="9"><div class="notes-content">Active IB. Working with Jaime who is HOT. May 13: worked together reviewing how to bring more clients.</div></td></tr>
+        <tr>
+          <td>10</td>
+          <td>Ashley Hurtado</td>
+          <td><span class="badge b-blue">Sebastián</span></td>
+          <td>Webinar audience</td>
+          <td>Colombia</td>
+          <td>$3K–$5K near</td>
+          <td><span class="dot dot-green"></span><span class="badge b-green">Active</span></td>
+          <td>Wednesday webinar</td>
+          <td><span class="notes-toggle" onclick="toggleNote(this)">›</span></td>
+        </tr>
+        <tr class="notes-row"><td colspan="9"><div class="notes-content">Wednesday webinar confirmed. Pipeline building well.</div></td></tr>
+        <tr>
+          <td>11</td>
+          <td>Leonardo Guaran</td>
+          <td><span class="badge b-blue">Sebastián</span></td>
+          <td>—</td>
+          <td>Colombia</td>
+          <td>$2K–$3K next</td>
+          <td><span class="dot dot-blue"></span><span class="badge b-blue">Funded $1,120</span></td>
+          <td>Push additional deposit</td>
+          <td><span class="notes-toggle" onclick="toggleNote(this)">›</span></td>
+        </tr>
+        <tr class="notes-row"><td colspan="9"><div class="notes-content">Sub-IB. Deposited $1,120 in April. Push for additional deposit.</div></td></tr>
+        <tr>
+          <td>12</td>
+          <td>Mario Andino</td>
+          <td><span class="badge b-blue">Sebastián</span></td>
+          <td>USA network</td>
+          <td>USA</td>
+          <td>$10K+ add.</td>
+          <td><span class="dot dot-green"></span><span class="badge b-green">Active $12,570</span></td>
+          <td>Keep network warm</td>
+          <td><span class="notes-toggle" onclick="toggleNote(this)">›</span></td>
+        </tr>
+        <tr class="notes-row"><td colspan="9"><div class="notes-content">IB Direct. $12,570 deposited across 7 transactions Apr–May. Keep relationship warm — biggest client.</div></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ═══════════════════ BDM PIPELINE ═══════════════════ -->
+  <div id="tab-bdm" class="panel">
+    <div class="section-title">Hiring Pipeline</div>
+    <table>
+      <thead>
+        <tr><th>#</th><th>Name</th><th>Owner</th><th>Direct Clients</th><th>Status</th><th>Background</th><th>Offer</th><th>Next Step</th><th>Notes</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>1</td><td>Sergio Vargas</td>
+          <td><span class="badge b-blue">Sebastián</span></td>
+          <td>$300K+ DOO portfolio</td>
+          <td><span class="dot dot-red"></span><span class="badge b-red">Closing</span></td>
+          <td>Senior BDM</td><td>$800–$3,000</td>
+          <td>Call tomorrow 11am</td>
+          <td><span class="notes-toggle" onclick="toggleNote(this)">›</span></td>
+        </tr>
+        <tr class="notes-row"><td colspan="9"><div class="notes-content">Advanced negotiation. Brings $300K+ DOO portfolio. Tomorrow 11am Colombia — close it.</div></td></tr>
+        <tr>
+          <td>2</td><td>Alexander Perazzolo</td>
+          <td><span class="badge b-purple">Nishil</span></td>
+          <td>Senior profile</td>
+          <td><span class="dot dot-red"></span><span class="badge b-red">Meeting tmw</span></td>
+          <td>Senior BDM</td><td>$1,250/mo</td>
+          <td>Tomorrow — Nishil hire</td>
+          <td><span class="notes-toggle" onclick="toggleNote(this)">›</span></td>
+        </tr>
+        <tr class="notes-row"><td colspan="9"><div class="notes-content">Requested by Nishil Patel. Meeting tomorrow. Strong senior profile.</div></td></tr>
+        <tr>
+          <td>3</td><td>Diego</td>
+          <td><span class="badge b-purple">Nishil</span></td>
+          <td>LATAM focus</td>
+          <td><span class="dot dot-red"></span><span class="badge b-red">1st meeting tmw</span></td>
+          <td>LATAM BDM</td><td>TBD</td>
+          <td>Tomorrow — Nishil arranged</td>
+          <td><span class="notes-toggle" onclick="toggleNote(this)">›</span></td>
+        </tr>
+        <tr class="notes-row"><td colspan="9"><div class="notes-content">Arranged by Nishil. First meeting tomorrow.</div></td></tr>
+        <tr>
+          <td>4</td><td>Leo</td>
+          <td><span class="badge b-blue">Sebastián</span></td>
+          <td>Recently at Ingot</td>
+          <td><span class="dot dot-yellow"></span><span class="badge b-yellow">Proposal pending</span></td>
+          <td>BDM prospect</td><td>TBD</td>
+          <td>Await his proposal</td>
+          <td><span class="notes-toggle" onclick="toggleNote(this)">›</span></td>
+        </tr>
+        <tr class="notes-row"><td colspan="9"><div class="notes-content">Recently left Ingot Brokers. Awaiting his business proposal.</div></td></tr>
+        <tr>
+          <td>5</td><td>Augusto Rodríguez</td>
+          <td><span class="badge b-blue">Sebastián</span></td>
+          <td>BDM prospect</td>
+          <td><span class="dot dot-yellow"></span><span class="badge b-yellow">Counteroffer sent</span></td>
+          <td>BDM prospect</td><td>$1,800 / $3K T4</td>
+          <td>Final response pending</td>
+          <td><span class="notes-toggle" onclick="toggleNote(this)">›</span></td>
+        </tr>
+        <tr class="notes-row"><td colspan="9"><div class="notes-content">Counteroffer sent. Waiting final response.</div></td></tr>
+        <tr>
+          <td>—</td><td>Alejandra Azambuya</td>
+          <td><span class="badge b-gray">—</span></td>
+          <td>—</td>
+          <td><span class="dot dot-gray"></span><span class="badge b-gray">❌ Lost to Vantage</span></td>
+          <td>—</td><td>—</td>
+          <td>Lesson: close faster</td>
+          <td><span class="notes-toggle" onclick="toggleNote(this)">›</span></td>
+        </tr>
+        <tr class="notes-row"><td colspan="9"><div class="notes-content">Lost to Vantage. Lesson: close hiring faster — candidates evaluate multiple offers simultaneously.</div></td></tr>
+      </tbody>
+    </table>
+
+    <div class="section-title">Active Team</div>
+    <table>
+      <thead>
+        <tr><th>Name</th><th>Role</th><th>Owner</th><th>Direct Clients</th><th>Deposits Generated</th><th>Focus This Week</th><th>Notes</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Cristian Llanos</td>
+          <td><span class="badge b-blue">ASM</span></td>
+          <td><span class="badge b-blue">Sebastián</span></td>
+          <td>Javier Lemus, Armando Castro</td>
+          <td>$2,890+</td>
+          <td>Armando 3 pending transfers · Javier $5K</td>
+          <td><span class="notes-toggle" onclick="toggleNote(this)">›</span></td>
+        </tr>
+        <tr class="notes-row"><td colspan="7"><div class="notes-content">Armando Castro: 3 pending wire transfers stuck at $500/day bank limit. Javier Lemus: $5K next deposit expected. Most active ASM.</div></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ═══════════════════ ASM — CRISTIAN ═══════════════════ -->
+  <div id="tab-asm" class="panel">
+    <table>
+      <thead>
+        <tr><th>#</th><th>Name</th><th>Owner</th><th>Direct Clients</th><th>Country</th><th>Potential</th><th>Status</th><th>Next Action</th><th>Notes</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>1</td><td>Armando Castro</td>
+          <td><span class="badge b-blue">Cristian</span></td>
+          <td>Personal account</td>
+          <td>Bolivia</td><td>$1,500 remaining</td>
+          <td><span class="dot dot-red"></span><span class="badge b-red">HOT</span></td>
+          <td>Confirm 3 pending wires</td>
+          <td><span class="notes-toggle" onclick="toggleNote(this)">›</span></td>
+        </tr>
+        <tr class="notes-row"><td colspan="9"><div class="notes-content">Blocker: $500/day bank limit. 3 pending wire transfers to confirm Thu–Fri. Total expected: $1,500 remaining.</div></td></tr>
+        <tr>
+          <td>2</td><td>Javier Lemus</td>
+          <td><span class="badge b-blue">Cristian</span></td>
+          <td>Personal account</td>
+          <td>Colombia</td><td>$5,000 next</td>
+          <td><span class="dot dot-orange"></span><span class="badge b-orange">Active</span></td>
+          <td>Push $5K deposit</td>
+          <td><span class="notes-toggle" onclick="toggleNote(this)">›</span></td>
+        </tr>
+        <tr class="notes-row"><td colspan="9"><div class="notes-content">Most frequent depositor. 8 deposits via Meta Funnel. $5K next deposit committed. Keep engaged.</div></td></tr>
+        <tr>
+          <td>3</td><td>Jaime</td>
+          <td><span class="badge b-purple">Carol / Cristian</span></td>
+          <td>Carol IB lead</td>
+          <td>Colombia</td><td>$2,000–$10,000</td>
+          <td><span class="dot dot-red"></span><span class="badge b-red">HOT</span></td>
+          <td>Personal call — close today</td>
+          <td><span class="notes-toggle" onclick="toggleNote(this)">›</span></td>
+        </tr>
+        <tr class="notes-row"><td colspan="9"><div class="notes-content">Decision pending. Carol and Cristian both working this. Push hard — high potential first deposit.</div></td></tr>
+        <tr>
+          <td>4</td><td>Jhoan Lasso</td>
+          <td><span class="badge b-blue">Cristian</span></td>
+          <td>Personal account</td>
+          <td>Colombia</td><td>Additional dep.</td>
+          <td><span class="dot dot-green"></span><span class="badge b-green">Deposited</span></td>
+          <td>Upsell next deposit</td>
+          <td><span class="notes-toggle" onclick="toggleNote(this)">›</span></td>
+        </tr>
+        <tr class="notes-row"><td colspan="9"><div class="notes-content">Deposited $250 Mar 02. Meta Funnel lead. Push for additional deposit.</div></td></tr>
+        <tr>
+          <td>5</td><td>Carlos Lozano</td>
+          <td><span class="badge b-blue">Cristian</span></td>
+          <td>Personal account</td>
+          <td>Colombia</td><td>Additional dep.</td>
+          <td><span class="dot dot-green"></span><span class="badge b-green">Deposited</span></td>
+          <td>Upsell next deposit</td>
+          <td><span class="notes-toggle" onclick="toggleNote(this)">›</span></td>
+        </tr>
+        <tr class="notes-row"><td colspan="9"><div class="notes-content">Deposited $250 Mar 13. Meta Funnel. Push for additional.</div></td></tr>
+        <tr>
+          <td>6</td><td>Carlos Barragán</td>
+          <td><span class="badge b-blue">Cristian</span></td>
+          <td>Personal account</td>
+          <td>Colombia</td><td>Additional dep.</td>
+          <td><span class="dot dot-green"></span><span class="badge b-green">Deposited</span></td>
+          <td>Upsell next deposit</td>
+          <td><span class="notes-toggle" onclick="toggleNote(this)">›</span></td>
+        </tr>
+        <tr class="notes-row"><td colspan="9"><div class="notes-content">Deposited $260 Mar 24. Meta Funnel. Push for additional.</div></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</div><!-- end content -->
+
+<script>
+// ─── TAB NAVIGATION ───────────────────────────────────────
+function showTab(name, el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('tab-' + name).classList.add('active');
+}
+
+// ─── EXPANDABLE NOTES ─────────────────────────────────────
+function toggleNote(btn) {
+  const row = btn.closest('tr').nextElementSibling;
+  if (!row || !row.classList.contains('notes-row')) return;
+  const open = row.style.display === 'table-row';
+  row.style.display = open ? 'none' : 'table-row';
+  btn.textContent = open ? '›' : '‹';
+}
+
+// ─── DEPOSITS DATA ────────────────────────────────────────
+const DEPOSITS = [
+  {n:26, date:'May 13', month:'May', year:2026, asm:'Sebastian Garcia', client:'Mario Andino',                 ftd:false, source:'IB Direct',   country:'USA',      amount:296.91},
+  {n:25, date:'May 13', month:'May', year:2026, asm:'Cristian Llanos',  client:'Armando Castro',               ftd:false, source:'IB Referral', country:'Bolivia',  amount:500.00},
+  {n:24, date:'Apr 30', month:'Apr', year:2026, asm:'Sebastian Garcia', client:'Mario Andino',                 ftd:false, source:'IB Direct',   country:'USA',      amount:676.89},
+  {n:23, date:'Apr 29', month:'Apr', year:2026, asm:'Sebastian Garcia', client:'Mario Andino',                 ftd:false, source:'IB Direct',   country:'USA',      amount:1968.80},
+  {n:22, date:'Apr 29', month:'Apr', year:2026, asm:'Sebastian Garcia', client:'Mario Andino',                 ftd:false, source:'IB Direct',   country:'USA',      amount:1878.31},
+  {n:21, date:'Apr 29', month:'Apr', year:2026, asm:'Sebastian Garcia', client:'Mario Andino',                 ftd:false, source:'IB Direct',   country:'USA',      amount:1126.38},
+  {n:20, date:'Apr 28', month:'Apr', year:2026, asm:'Sebastian Garcia', client:'Mario Andino',                 ftd:false, source:'IB Direct',   country:'USA',      amount:1740.00},
+  {n:19, date:'Apr 27', month:'Apr', year:2026, asm:'Sebastian Garcia', client:'Mario Andino',                 ftd:true,  source:'IB Direct',   country:'USA',      amount:5180.00},
+  {n:18, date:'Apr 23', month:'Apr', year:2026, asm:'Sebastian Garcia', client:'Leonardo Guaran',              ftd:true,  source:'IB Referral', country:'Colombia', amount:1120.00},
+  {n:17, date:'Apr 22', month:'Apr', year:2026, asm:'Cristian Llanos',  client:'Javier Lemus',                ftd:false, source:'Meta Funnel', country:'Colombia', amount:400.00},
+  {n:16, date:'Apr 22', month:'Apr', year:2026, asm:'Cristian Llanos',  client:'Javier Lemus',                ftd:false, source:'Meta Funnel', country:'Colombia', amount:400.00},
+  {n:15, date:'Apr 20', month:'Apr', year:2026, asm:'Cristian Llanos',  client:'Javier Lemus',                ftd:false, source:'Meta Funnel', country:'Colombia', amount:600.00},
+  {n:14, date:'Apr 17', month:'Apr', year:2026, asm:'Cristian Llanos',  client:'Javier Lemus',                ftd:false, source:'Meta Funnel', country:'Colombia', amount:200.00},
+  {n:13, date:'Apr 17', month:'Apr', year:2026, asm:'Cristian Llanos',  client:'Javier Lemus',                ftd:false, source:'Meta Funnel', country:'Colombia', amount:350.00},
+  {n:12, date:'Apr 16', month:'Apr', year:2026, asm:'Cristian Llanos',  client:'Javier Lemus',                ftd:false, source:'Meta Funnel', country:'Colombia', amount:210.00},
+  {n:11, date:'Mar 31', month:'Mar', year:2026, asm:'David Zapata',     client:'Isabel Leguizamo',            ftd:true,  source:'Meta Funnel', country:'Colombia', amount:250.00},
+  {n:10, date:'Mar 30', month:'Mar', year:2026, asm:'Cristian Llanos',  client:'Javier Lemus',                ftd:false, source:'Meta Funnel', country:'Colombia', amount:320.00},
+  {n:9,  date:'Mar 27', month:'Mar', year:2026, asm:'Cristian Llanos',  client:'Javier Lemus',                ftd:false, source:'Meta Funnel', country:'Colombia', amount:250.00},
+  {n:8,  date:'Mar 24', month:'Mar', year:2026, asm:'Pulse Operations', client:'Armando Castro',              ftd:true,  source:'IB Referral', country:'Bolivia',  amount:500.00},
+  {n:7,  date:'Mar 24', month:'Mar', year:2026, asm:'Cristian Llanos',  client:'Carlos Barragán',             ftd:true,  source:'Meta Funnel', country:'Colombia', amount:260.00},
+  {n:6,  date:'Mar 13', month:'Mar', year:2026, asm:'Cristian Llanos',  client:'Carlos Lozano',               ftd:true,  source:'Meta Funnel', country:'Colombia', amount:250.00},
+  {n:5,  date:'Mar 02', month:'Mar', year:2026, asm:'Cristian Llanos',  client:'Jhoan Lasso',                 ftd:true,  source:'Meta Funnel', country:'Colombia', amount:250.00},
+  {n:4,  date:'Feb 21', month:'Feb', year:2026, asm:'Augusto Mejia',    client:'Jennifer Ararat',             ftd:true,  source:'Direct',      country:'Colombia', amount:250.00},
+  {n:3,  date:'Feb 18', month:'Feb', year:2026, asm:'Cristian Llanos',  client:'Javier Lemus',                ftd:true,  source:'Meta Funnel', country:'Colombia', amount:250.00},
+  {n:2,  date:'Feb 11', month:'Feb', year:2026, asm:'Sebastian Garcia', client:'Juan Alvira',                 ftd:true,  source:'IB Referral', country:'Colombia', amount:1499.20},
+  {n:1,  date:'Feb 06', month:'Feb', year:2026, asm:'Sebastian Garcia', client:'Juan Camilo Escobar',         ftd:true,  source:'Direct',      country:'Colombia', amount:1000.90},
+];
+
+const ASM_ROLES = {
+  'Sebastian Garcia': 'GM',
+  'Cristian Llanos': 'ASM',
+  'Augusto Mejia': 'Former',
+  'David Zapata': 'Former',
+  'Pulse Operations': 'IB',
+};
+
+// ─── DEPOSIT REGISTER TABLE ───────────────────────────────
+function renderDeposits(rows) {
+  const tbody = document.getElementById('dep-body');
+  tbody.innerHTML = rows.map(d => `
+    <tr>
+      <td>${d.n}</td>
+      <td>${d.date}</td>
+      <td>${d.month}</td>
+      <td>${d.asm}</td>
+      <td>${d.client}</td>
+      <td style="text-align:center">${d.ftd ? '<span style="color:#3182ce;font-weight:700;">✓</span>' : ''}</td>
+      <td>${d.source}</td>
+      <td>${d.country}</td>
+      <td style="font-weight:700;">$${d.amount.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
+    </tr>
+  `).join('');
+}
+renderDeposits(DEPOSITS);
+
+function searchDeposits(q) {
+  const lq = q.toLowerCase();
+  const filtered = DEPOSITS.filter(d =>
+    d.asm.toLowerCase().includes(lq) ||
+    d.client.toLowerCase().includes(lq) ||
+    d.month.toLowerCase().includes(lq) ||
+    d.source.toLowerCase().includes(lq) ||
+    d.country.toLowerCase().includes(lq)
+  );
+  renderDeposits(filtered);
+}
+
+// ─── COMMERCIAL RANKING ───────────────────────────────────
+const MEDALS = ['🥇','🥈','🥉','4','5','6','7'];
+
+function filterRanking(period, btn) {
+  document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+
+  let rows = DEPOSITS;
+  if (period === '2026') rows = DEPOSITS.filter(d => d.year === 2026);
+  else if (period !== 'all') rows = DEPOSITS.filter(d => d.month === period);
+
+  const agg = {};
+  rows.forEach(d => {
+    if (!agg[d.asm]) agg[d.asm] = { deps: 0, total: 0, ftds: 0, clients: {} };
+    agg[d.asm].deps++;
+    agg[d.asm].total += d.amount;
+    if (d.ftd) agg[d.asm].ftds++;
+    agg[d.asm].clients[d.client] = (agg[d.asm].clients[d.client] || 0) + d.amount;
+  });
+
+  const sorted = Object.entries(agg).sort((a, b) => b[1].total - a[1].total);
+  const grand = sorted.reduce((s, [, v]) => s + v.total, 0);
+  const grandDeps = rows.length;
+
+  const fmt = n => '$' + n.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+
+  let html = `<table>
+    <thead><tr>
+      <th>#</th><th>Commercial</th><th>Role</th><th>Deposits</th><th>FTDs</th>
+      <th>Total USD</th><th>% of Total</th><th>Top Client</th>
+    </tr></thead><tbody>`;
+
+  sorted.forEach(([name, d], i) => {
+    const pct = grand > 0 ? (d.total / grand * 100).toFixed(1) : '0.0';
+    const barW = grand > 0 ? Math.round(d.total / grand * 100) : 0;
+    const top = Object.entries(d.clients).sort((a,b) => b[1]-a[1])[0];
+    const topStr = top ? `${top[0]} (${fmt(top[1])})` : '—';
+    const role = ASM_ROLES[name] || '—';
+    html += `<tr>
+      <td>${MEDALS[i] || i+1}</td>
+      <td><strong>${name}</strong></td>
+      <td><span class="badge ${role==='GM'?'b-purple':role==='ASM'?'b-blue':role==='IB'?'b-green':'b-gray'}">${role}</span></td>
+
+      <td style="text-align:center">${d.deps}</td>
+      <td style="text-align:center">${d.ftds}</td>
+      <td><strong>${fmt(d.total)}</strong></td>
+      <td>${pct}%<span class="bar-wrap"><span class="bar-fill" style="width:${barW}%"></span></span></td>
+      <td style="font-size:10px;color:#718096">${topStr}</td>
+    </tr>`;
+  });
+
+  html += `<tr class="total-row">
+    <td>—</td><td><strong>Total</strong></td><td>—</td>
+    <td style="text-align:center"><strong>${grandDeps}</strong></td>
+    <td style="text-align:center"><strong>${rows.filter(d=>d.ftd).length}</strong></td>
+    <td><strong>${fmt(grand)}</strong></td>
+    <td>100%</td><td>—</td>
+  </tr>`;
+  html += '</tbody></table>';
+
+  document.getElementById('ranking-container').innerHTML = html;
+}
+
+// Init
+filterRanking('all', document.querySelector('.period-btn'));
+</script>
+</body>
+</html>
