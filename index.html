@@ -115,8 +115,8 @@ tbody tr:nth-child(even):hover td { background: #f0f4f8; }
 
 <!-- KPI BAR -->
 <div class="kpi-bar">
-  <div class="kpi"><div class="kpi-val">$21,727</div><div class="kpi-lbl">Total Deposited</div></div>
-  <div class="kpi"><div class="kpi-val">$797</div><div class="kpi-lbl">May So Far</div></div>
+  <div class="kpi"><div class="kpi-val">$22,227</div><div class="kpi-lbl">Total Deposited</div></div>
+  <div class="kpi"><div class="kpi-val">$1,297</div><div class="kpi-lbl">May So Far</div></div>
   <div class="kpi"><div class="kpi-val">12</div><div class="kpi-lbl">Total FTDs</div></div>
   <div class="kpi"><div class="kpi-val">$200K</div><div class="kpi-lbl">May Target</div></div>
   <div class="kpi"><div class="kpi-val">$530K+</div><div class="kpi-lbl">Pipeline Potential</div></div>
@@ -157,8 +157,8 @@ tbody tr:nth-child(even):hover td { background: #f0f4f8; }
       </div>
       <div class="month-card active-month">
         <div class="mc-label">May 2026 🔄</div>
-        <div class="mc-amount">$797</div>
-        <div class="mc-meta">2 deposits</div>
+        <div class="mc-amount">$1,297</div>
+        <div class="mc-meta">3 deposits</div>
         <div class="mc-ftd">1 FTD</div>
       </div>
       <div class="month-card future">
@@ -472,7 +472,7 @@ tbody tr:nth-child(even):hover td { background: #f0f4f8; }
           <td>Confirm 3 pending wires</td>
           <td><span class="notes-toggle" onclick="toggleNote(this)">›</span></td>
         </tr>
-        <tr class="notes-row"><td colspan="9"><div class="notes-content"><strong>2026-05-14</strong> — Blocker: $500/day bank limit. 3 pending wire transfers to confirm Thu–Fri. Total expected: $1,500 remaining.</div></td></tr>
+        <tr class="notes-row"><td colspan="9"><div class="notes-content"><strong>2026-05-14</strong> — Depósito $500 por Stripe en marcha. Planificado: 4 depósitos diarios de $500 hasta completar $2,000, luego se solicita cargo a la cuenta.<br><br><strong>2026-05-14</strong> — Blocker: $500/day bank limit. 3 pending wire transfers to confirm Thu–Fri. Total expected: $1,500 remaining.</div></td></tr>
         <tr>
           <td>2</td><td>Javier Lemus</td>
           <td><span class="badge b-blue">Cristian</span></td>
@@ -549,6 +549,7 @@ function toggleNote(btn) {
 
 // ─── DEPOSITS DATA ────────────────────────────────────────
 const DEPOSITS = [
+  {n:27, date:'May 14', month:'May', year:2026, asm:'Cristian Llanos',  client:'Armando Castro',               ftd:false, source:'Direct',     country:'Bolivia',  amount:500.00},
   {n:26, date:'May 13', month:'May', year:2026, asm:'Sebastian Garcia', client:'Mario Andino',                 ftd:false, source:'IB Direct',   country:'USA',      amount:296.91},
   {n:25, date:'May 13', month:'May', year:2026, asm:'Cristian Llanos',  client:'Armando Castro',               ftd:false, source:'IB Referral', country:'Bolivia',  amount:500.00},
   {n:24, date:'Apr 30', month:'Apr', year:2026, asm:'Sebastian Garcia', client:'Mario Andino',                 ftd:false, source:'IB Direct',   country:'USA',      amount:676.89},
