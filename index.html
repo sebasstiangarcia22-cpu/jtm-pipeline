@@ -110,14 +110,14 @@ tbody tr:nth-child(even):hover td { background: #f0f4f8; }
 <!-- HEADER -->
 <div class="header">
   <div class="header-title">JT Markets — LATAM Pipeline</div>
-  <div class="header-meta">GM: Sebastián García &nbsp;·&nbsp; Updated May 15, 2026</div>
+  <div class="header-meta">GM: Sebastián García &nbsp;·&nbsp; Updated May 18, 2026</div>
 </div>
 
 <!-- KPI BAR -->
 <div class="kpi-bar">
-  <div class="kpi"><div class="kpi-val">$22,727</div><div class="kpi-lbl">Total Deposited</div></div>
-  <div class="kpi"><div class="kpi-val">$1,797</div><div class="kpi-lbl">May So Far</div></div>
-  <div class="kpi"><div class="kpi-val">12</div><div class="kpi-lbl">Total FTDs</div></div>
+  <div class="kpi"><div class="kpi-val" id="kpi-total">$0</div><div class="kpi-lbl">Total Deposited</div></div>
+  <div class="kpi"><div class="kpi-val" id="kpi-may">$0</div><div class="kpi-lbl">May So Far</div></div>
+  <div class="kpi"><div class="kpi-val" id="kpi-ftds">0</div><div class="kpi-lbl">Total FTDs</div></div>
   <div class="kpi"><div class="kpi-val">$200K</div><div class="kpi-lbl">May Target</div></div>
   <div class="kpi"><div class="kpi-val">$530K+</div><div class="kpi-lbl">Pipeline Potential</div></div>
 </div>
@@ -126,8 +126,9 @@ tbody tr:nth-child(even):hover td { background: #f0f4f8; }
 <div class="tabs">
   <div class="tab active" onclick="showTab('deposits', this)">Deposits</div>
   <div class="tab" onclick="showTab('ib', this)">IB Funnel</div>
+  <div class="tab" onclick="showTab('ib-clients', this)">Main Direct Clients</div>
   <div class="tab" onclick="showTab('bdm', this)">BDM Pipeline</div>
-  <div class="tab" onclick="showTab('asm', this)">Account Sales Manager — Cristian</div>
+  <div class="tab" onclick="showTab('asm', this)">ASM</div>
 </div>
 
 <div class="content">
@@ -136,49 +137,14 @@ tbody tr:nth-child(even):hover td { background: #f0f4f8; }
   <div id="tab-deposits" class="panel active">
 
     <!-- Month Cards -->
-    <div class="month-grid">
-      <div class="month-card">
-        <div class="mc-label">Feb 2026</div>
-        <div class="mc-amount">$3,000</div>
-        <div class="mc-meta">4 deposits</div>
-        <div class="mc-ftd">4 FTDs</div>
-      </div>
-      <div class="month-card">
-        <div class="mc-label">Mar 2026</div>
-        <div class="mc-amount">$2,080</div>
-        <div class="mc-meta">7 deposits</div>
-        <div class="mc-ftd">5 FTDs</div>
-      </div>
-      <div class="month-card best-month">
-        <div class="mc-label">Apr 2026</div>
-        <div class="mc-amount">$15,850</div>
-        <div class="mc-meta">13 deposits</div>
-        <div class="mc-ftd">2 FTDs</div>
-      </div>
-      <div class="month-card active-month">
-        <div class="mc-label">May 2026 🔄</div>
-        <div class="mc-amount">$1,797</div>
-        <div class="mc-meta">4 deposits</div>
-        <div class="mc-ftd">1 FTD</div>
-      </div>
-      <div class="month-card future">
-        <div class="mc-label">Jun</div>
-        <div class="mc-amount future-amt">—</div>
-        <div class="mc-meta" style="color:#e2e8f0;">—</div>
-      </div>
-      <div class="month-card future">
-        <div class="mc-label">Jul–Dec</div>
-        <div class="mc-amount future-amt">—</div>
-        <div class="mc-meta" style="color:#e2e8f0;">—</div>
-      </div>
-    </div>
+    <div class="month-grid" id="month-grid"></div>
 
     <!-- Stats -->
     <div class="stats-row">
-      <div class="stat-box"><div class="stat-val">12</div><div class="stat-lbl">Total FTDs (all time)</div></div>
-      <div class="stat-box"><div class="stat-val">26</div><div class="stat-lbl">Total deposits</div></div>
-      <div class="stat-box"><div class="stat-val">2.17x</div><div class="stat-lbl">Avg deposits per client</div></div>
-      <div class="stat-box"><div class="stat-val">$835</div><div class="stat-lbl">Avg deposit size</div></div>
+      <div class="stat-box"><div class="stat-val" id="stat-ftds">0</div><div class="stat-lbl">Total FTDs (all time)</div></div>
+      <div class="stat-box"><div class="stat-val" id="stat-deps">0</div><div class="stat-lbl">Total deposits</div></div>
+      <div class="stat-box"><div class="stat-val" id="stat-avg-deps">0</div><div class="stat-lbl">Avg deposits per client</div></div>
+      <div class="stat-box"><div class="stat-val" id="stat-avg-size">$0</div><div class="stat-lbl">Avg deposit size</div></div>
     </div>
 
     <!-- Ranking by Commercial -->
@@ -212,6 +178,7 @@ tbody tr:nth-child(even):hover td { background: #f0f4f8; }
 
   <!-- ═══════════════════ IB FUNNEL ═══════════════════ -->
   <div id="tab-ib" class="panel">
+    <div class="section-title">In Negotiation / Pending</div>
     <table>
       <thead>
         <tr><th>#</th><th>Name</th><th>Owner</th><th>Direct Clients</th><th>Country</th><th>Potential</th><th>Status</th><th>Next Action</th><th>Notes</th></tr>
@@ -219,6 +186,18 @@ tbody tr:nth-child(even):hover td { background: #f0f4f8; }
       <tbody>
         <tr>
           <td>1</td>
+          <td>Pedro Abadia</td>
+          <td><span class="badge b-blue">Nestor</span> <span class="badge b-gray">BDM</span></td>
+          <td>$600K+ in other brokers</td>
+          <td>LATAM</td>
+          <td>$600K+ potential</td>
+          <td><span class="dot dot-red"></span><span class="badge b-red">1st meeting</span></td>
+          <td>Close Tuesday 19 (travel)</td>
+          <td><span class="notes-toggle" onclick="toggleNote(this)">›</span></td>
+        </tr>
+        <tr class="notes-row"><td colspan="9"><div class="notes-content"><strong>2026-05-18</strong> — Today we reviewed Forex Masterclass and its features. Very interested. Tomorrow lunch with him.<br><br><strong>2026-05-15</strong> — First meeting scheduled Tuesday 19 May, 1 PM. Has $600K+ in other brokers. Travels to Houston Wed — must close Tuesday yes or no. High priority deal.</div></td></tr>
+        <tr>
+          <td>3</td>
           <td>Augusto Rodríguez</td>
           <td><span class="badge b-blue">Sebastián</span></td>
           <td>Copy trading setup</td>
@@ -228,58 +207,22 @@ tbody tr:nth-child(even):hover td { background: #f0f4f8; }
           <td>Await Nishil credit OK</td>
           <td><span class="notes-toggle" onclick="toggleNote(this)">›</span></td>
         </tr>
-        <tr class="notes-row"><td colspan="9"><div class="notes-content"><strong>2026-05-15</strong> — Transitioned from BDM. Declined BDM offer, proposes to start as IB. Requests credit account with non-retirable capital for copy trading integration. Pending: validation of credit account with Nishil.</div></td></tr>
-        <tr>
-          <td>2</td>
-          <td>Jaime</td>
-          <td><span class="badge b-blue">Carol</span> & <span class="badge b-blue">Sebastián</span></td>
-          <td>Client + IB</td>
-          <td>Colombia</td>
-          <td>$2K–$10K</td>
-          <td><span class="dot dot-red"></span><span class="badge b-red">HOT</span></td>
-          <td>Personal call — close</td>
-          <td><span class="notes-toggle" onclick="toggleNote(this)">›</span></td>
-        </tr>
-        <tr class="notes-row"><td colspan="9"><div class="notes-content"><strong>2026-05-15</strong> — Carol Rodriguez IB lead. Direct client with high potential. Both Carol and Cristian pushing hard. Decision pending — high-value first deposit.</div></td></tr>
-        <tr>
-          <td>3</td>
-          <td>Pulse Operations — Jhoantan Rojas</td>
-          <td><span class="badge b-blue">Sebastián</span></td>
-          <td>FMC opening agents</td>
-          <td>LATAM</td>
-          <td>6–8 agents active</td>
-          <td><span class="dot dot-orange"></span><span class="badge b-orange">Active</span></td>
-          <td>Organize marketing Tue</td>
-          <td><span class="notes-toggle" onclick="toggleNote(this)">›</span></td>
-        </tr>
-        <tr class="notes-row"><td colspan="9"><div class="notes-content"><strong>2026-05-15</strong> — Resumed commitment with project. Other broker sends only client retention — his opening team has no work. Strategy: focus 6–8 FMC agents with Marcela. Kickoff meeting Tue 19 May AM to organize marketing. Operations status: ACTIVE from Tue 19.</div></td></tr>
+        <tr class="notes-row"><td colspan="9"><div class="notes-content"><strong>2026-05-18</strong> — Nishil approved $5K credit account to connect copy trading. Will have 5 revenue streams (performance fee + rebates). Already informed him, awaiting response. Following up.<br><br><strong>2026-05-15</strong> — Transitioned from BDM. Declined BDM offer, proposes to start as IB. Requests credit account with non-retirable capital for copy trading integration. Pending: validation of credit account with Nishil.</div></td></tr>
         <tr>
           <td>4</td>
-          <td>Pedro (Cali) — IB Nestor's ref</td>
-          <td><span class="badge b-blue">Sebastián</span></td>
-          <td>$600K+ in other brokers</td>
-          <td>LATAM</td>
-          <td>$600K+ potential</td>
-          <td><span class="dot dot-red"></span><span class="badge b-red">1st meeting</span></td>
-          <td>Close Tuesday 19 (travel)</td>
-          <td><span class="notes-toggle" onclick="toggleNote(this)">›</span></td>
-        </tr>
-        <tr class="notes-row"><td colspan="9"><div class="notes-content"><strong>2026-05-15</strong> — First meeting scheduled Tuesday 19 May, 1 PM. Has $600K+ in other brokers. Travels to Houston Wed — must close Tuesday yes or no. High priority deal.</div></td></tr>
-        <tr>
-          <td>5</td>
-          <td>Nestor Torres — IB</td>
-          <td><span class="badge b-blue">Sebastián</span></td>
-          <td>Spanish trader client</td>
+          <td>Manuel Nico</td>
+          <td><span class="badge b-blue">Nestor</span> <span class="badge b-gray">BDM</span></td>
+          <td>Spanish trader prospects</td>
           <td>Spain</td>
           <td>Risk of churn</td>
           <td><span class="dot dot-red"></span><span class="badge b-red">At Risk</span></td>
           <td>Build objection vs VT</td>
           <td><span class="notes-toggle" onclick="toggleNote(this)">›</span></td>
         </tr>
-        <tr class="notes-row"><td colspan="9"><div class="notes-content"><strong>2026-05-15</strong> — Client compared JT vs VT Markets live demo. Favored VT by dashboard & website UI. Nestor unable to counter effectively. Action needed: Build objection block with hard data vs VT Markets competitive comparison. Status: AT RISK — requires immediate action.</div></td></tr>
+        <tr class="notes-row"><td colspan="9"><div class="notes-content"><strong>2026-05-15</strong> — IB prospect. Client compared JT vs VT Markets live demo. Favored VT by dashboard & website UI. Unable to counter effectively. Action needed: Build objection block with hard data vs VT Markets competitive comparison. Status: AT RISK — requires immediate action.</div></td></tr>
         <tr>
-          <td>6</td>
-          <td>⭐ Álvaro Cuartas</td>
+          <td>5</td>
+          <td>Álvaro Cuartas</td>
           <td><span class="badge b-blue">Sebastián</span></td>
           <td>Active traders</td>
           <td>Colombia</td>
@@ -290,20 +233,8 @@ tbody tr:nth-child(even):hover td { background: #f0f4f8; }
         </tr>
         <tr class="notes-row"><td colspan="9"><div class="notes-content"><strong>2026-05-15</strong> — Risk rejected rollover arbitrage strategy (Wed EOD). Strategy incompatible with platform. Risk message drafted for re-engagement.<br><br><strong>2026-05-14</strong> — Condition: Free Swap not yet approved internally. This is the only blocker. High-value IB — escalate to risk team within 24h.</div></td></tr>
         <tr>
-          <td>7</td>
-          <td>⭐ Sergio Monroy</td>
-          <td><span class="badge b-blue">Sebastián</span></td>
-          <td>$100K+/qtr book</td>
-          <td>LATAM</td>
-          <td>$100K+/qtr</td>
-          <td><span class="dot dot-orange"></span><span class="badge b-orange">Active</span></td>
-          <td>Confirm Bogotá meeting</td>
-          <td><span class="notes-toggle" onclick="toggleNote(this)">›</span></td>
-        </tr>
-        <tr class="notes-row"><td colspan="9"><div class="notes-content"><strong>2026-05-14</strong> — Requested in-person meeting in Bogotá. High potential. Confirm date this week.</div></td></tr>
-        <tr>
-          <td>8</td>
-          <td>⭐ Dionisio Sifontes</td>
+          <td>6</td>
+          <td>Dionisio Sifontes</td>
           <td><span class="badge b-blue">Sebastián</span></td>
           <td>Copy trading followers</td>
           <td>LATAM</td>
@@ -314,19 +245,7 @@ tbody tr:nth-child(even):hover td { background: #f0f4f8; }
         </tr>
         <tr class="notes-row"><td colspan="9"><div class="notes-content"><strong>2026-05-14</strong> — Copy trading strategy is live. Re-engage with copy trading angle — this could drive significant volume.</div></td></tr>
         <tr>
-          <td>9</td>
-          <td>⭐ Alexis Aguilar</td>
-          <td><span class="badge b-blue">Sebastián</span></td>
-          <td>LATAM network</td>
-          <td>LATAM</td>
-          <td>$100K–$200K</td>
-          <td><span class="dot dot-orange"></span><span class="badge b-orange">Active push</span></td>
-          <td>Recontact this week</td>
-          <td><span class="notes-toggle" onclick="toggleNote(this)">›</span></td>
-        </tr>
-        <tr class="notes-row"><td colspan="9"><div class="notes-content"><strong>2026-05-14</strong> — Strong LATAM network. High conviction. Recontact this week.</div></td></tr>
-        <tr>
-          <td>10</td>
+          <td>7</td>
           <td>Dan</td>
           <td><span class="badge b-blue">Sebastián</span></td>
           <td>Influencer network</td>
@@ -338,7 +257,7 @@ tbody tr:nth-child(even):hover td { background: #f0f4f8; }
         </tr>
         <tr class="notes-row"><td colspan="9"><div class="notes-content"><strong>2026-05-13</strong> — introductions to new influencers in his network. Deal advancing — influencer intros ongoing.</div></td></tr>
         <tr>
-          <td>11</td>
+          <td>8</td>
           <td>Christian Farfan</td>
           <td><span class="badge b-blue">Sebastián</span></td>
           <td>LATAM book</td>
@@ -350,7 +269,7 @@ tbody tr:nth-child(even):hover td { background: #f0f4f8; }
         </tr>
         <tr class="notes-row"><td colspan="9"><div class="notes-content"><strong>2026-05-14</strong> — Call scheduled for this week. Warm lead.</div></td></tr>
         <tr>
-          <td>12</td>
+          <td>9</td>
           <td>Mariano — Trading Emergente</td>
           <td><span class="badge b-blue">Sebastián</span></td>
           <td>ARG/Medellín community</td>
@@ -362,7 +281,7 @@ tbody tr:nth-child(even):hover td { background: #f0f4f8; }
         </tr>
         <tr class="notes-row"><td colspan="9"><div class="notes-content"><strong>2026-05-13</strong> — FMC presented to Mariano. Follow up this week on next steps.</div></td></tr>
         <tr>
-          <td>13</td>
+          <td>10</td>
           <td>Keylin Masis</td>
           <td><span class="badge b-blue">Sebastián</span></td>
           <td>LATAM</td>
@@ -374,59 +293,141 @@ tbody tr:nth-child(even):hover td { background: #f0f4f8; }
         </tr>
         <tr class="notes-row"><td colspan="9"><div class="notes-content"><strong>2026-05-14</strong> — Meeting scheduled for this week.</div></td></tr>
         <tr>
-          <td>14</td>
+          <td>11</td>
+          <td>Felipe Márquez</td>
+          <td><span class="badge b-blue">Nestor</span> <span class="badge b-gray">BDM</span></td>
+          <td>—</td>
+          <td>LATAM</td>
+          <td>TBD</td>
+          <td><span class="dot dot-yellow"></span><span class="badge b-yellow">Under evaluation</span></td>
+          <td>Assess collaboration fit</td>
+          <td><span class="notes-toggle" onclick="toggleNote(this)">›</span></td>
+        </tr>
+        <tr class="notes-row"><td colspan="9"><div class="notes-content"><strong>2026-05-18</strong> — Client in evaluation stage for possible collaboration opportunity.</div></td></tr>
+      </tbody>
+    </table>
+
+    <div class="section-title" style="margin-top: 30px;">Active IBs</div>
+    <table id="active-ibs-table">
+      <thead>
+        <tr><th>#</th><th>Name</th><th>Owner</th><th>Portfolio</th><th>Country</th><th>Referrals</th><th>Status</th><th>Next Action</th><th>Notes</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>1</td>
+          <td>Pulse Operations</td>
+          <td><span class="badge b-blue">Sebastián</span></td>
+          <td>$2,500+</td>
+          <td>LATAM</td>
+          <td>No referrals yet</td>
+          <td><span class="dot dot-green"></span><span class="badge b-green">Active (funded)</span></td>
+          <td>Grow referral network</td>
+          <td><span class="notes-toggle" onclick="toggleNote(this)">›</span></td>
+        </tr>
+        <tr class="notes-row"><td colspan="9"><div class="notes-content"><strong>2026-05-17</strong> — Portfolio established. Now generating referrals for IB program. Active IB operations.</div></td></tr>
+        <tr>
+          <td>2</td>
           <td>Carol Rodriguez</td>
           <td><span class="badge b-blue">Sebastián</span></td>
-          <td>Jaime (HOT)</td>
-          <td>LATAM</td>
-          <td>$10K+ pipeline</td>
-          <td><span class="dot dot-green"></span><span class="badge b-green">Generating</span></td>
-          <td>Push Jaime close</td>
-          <td><span class="notes-toggle" onclick="toggleNote(this)">›</span></td>
-        </tr>
-        <tr class="notes-row"><td colspan="9"><div class="notes-content"><strong>2026-05-14</strong> — Active IB. Working with Jaime who is HOT.<br><br><strong>2026-05-13</strong> — worked together reviewing how to bring more clients.</div></td></tr>
-        <tr>
-          <td>15</td>
-          <td>Ashley Hurtado</td>
-          <td><span class="badge b-blue">Sebastián</span></td>
-          <td>Webinar audience</td>
+          <td>$2,500+</td>
           <td>Colombia</td>
-          <td>$3K–$5K near</td>
-          <td><span class="dot dot-green"></span><span class="badge b-green">Active</span></td>
-          <td>Wednesday webinar</td>
+          <td>Juan Alvira ($1,500)</td>
+          <td><span class="dot dot-green"></span><span class="badge b-green">Active (funded)</span></td>
+          <td>Grow referral book</td>
           <td><span class="notes-toggle" onclick="toggleNote(this)">›</span></td>
         </tr>
-        <tr class="notes-row"><td colspan="9"><div class="notes-content"><strong>2026-05-14</strong> — Wednesday webinar confirmed. Pipeline building well.</div></td></tr>
+        <tr class="notes-row"><td colspan="9"><div class="notes-content"><strong>2026-05-18</strong> — Direct client and IB. Actively generating referrals. Juan Alvira ($1,500 FTD in Feb) is her primary referral to date.<br><br><strong>2026-05-15</strong> — Moved to Active IBs. Direct client + IB funnel lead with active referral generation.</div></td></tr>
         <tr>
-          <td>16</td>
-          <td>Leonardo Guaran</td>
-          <td><span class="badge b-blue">Sebastián</span></td>
-          <td>—</td>
-          <td>Colombia</td>
-          <td>$2K–$3K next</td>
-          <td><span class="dot dot-blue"></span><span class="badge b-blue">Funded $1,120</span></td>
-          <td>Push additional deposit</td>
-          <td><span class="notes-toggle" onclick="toggleNote(this)">›</span></td>
-        </tr>
-        <tr class="notes-row"><td colspan="9"><div class="notes-content"><strong>2026-05-14</strong> — Sub-IB. Deposited $1,120 in April. Push for additional deposit.</div></td></tr>
-        <tr>
-          <td>17</td>
+          <td>3</td>
           <td>Mario Andino</td>
           <td><span class="badge b-blue">Sebastián</span></td>
-          <td>USA network</td>
-          <td>USA</td>
-          <td>$10K+ add.</td>
-          <td><span class="dot dot-green"></span><span class="badge b-green">Active $12,570</span></td>
-          <td>Keep network warm</td>
+          <td>$13,000+</td>
+          <td>LATAM</td>
+          <td>TBD</td>
+          <td><span class="dot dot-green"></span><span class="badge b-green">Active (funded)</span></td>
+          <td>Onboard as IB</td>
           <td><span class="notes-toggle" onclick="toggleNote(this)">›</span></td>
         </tr>
-        <tr class="notes-row"><td colspan="9"><div class="notes-content"><strong>2026-05-14</strong> — IB Direct. $12,570 deposited across 7 transactions Apr–May. Keep relationship warm — biggest client.</div></td></tr>
+        <tr class="notes-row"><td colspan="9"><div class="notes-content"><strong>2026-05-18</strong> — Major portfolio ($13,000+). Now onboarding as IB. Expected to generate referrals.<br><br><strong>2026-05-13</strong> — Mario Andino confirmed participation as IB. Mkt cap approaching limit — requires re-entry for IB operations.</div></td></tr>
       </tbody>
     </table>
   </div>
 
+  <!-- ═══════════════════ MAIN IB CLIENTS ═══════════════════ -->
+  <div id="tab-ib-clients" class="panel">
+    <div class="section-title">In Negotiation / Pending</div>
+    <table>
+      <thead>
+        <tr><th>#</th><th>Client Name</th><th>IB Owner</th><th>Country</th><th>Potential</th><th>Status</th><th>Next Action</th><th>Notes</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>1</td>
+          <td>Jaime</td>
+          <td><span class="badge b-purple">Carol</span> <span class="badge b-green">IB</span></td>
+          <td>Colombia</td>
+          <td>$2K–$10K</td>
+          <td><span class="dot dot-red"></span><span class="badge b-red">HOT</span></td>
+          <td>Personal call — close</td>
+          <td><span class="notes-toggle" onclick="toggleNote(this)">›</span></td>
+        </tr>
+        <tr class="notes-row"><td colspan="8"><div class="notes-content"><strong>2026-05-15</strong> — Direct client with high potential. Both Carol and Cristian pushing hard. Decision pending — high-value first deposit.</div></td></tr>
+      </tbody>
+    </table>
+
+    <div class="section-title">Active Direct Clients</div>
+    <table>
+      <thead>
+        <tr><th>#</th><th>Client Name</th><th>IB Owner</th><th>Country</th><th>Total Funded</th><th>Status</th><th>Next Action</th><th>Notes</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>1</td>
+          <td>Juan Alvira</td>
+          <td><span class="badge b-purple">Carol</span> <span class="badge b-green">IB</span></td>
+          <td>Colombia</td>
+          <td>$1,500</td>
+          <td><span class="dot dot-green"></span><span class="badge b-green">Active</span></td>
+          <td>Upsell additional deposits</td>
+          <td><span class="notes-toggle" onclick="toggleNote(this)">›</span></td>
+        </tr>
+        <tr class="notes-row"><td colspan="8"><div class="notes-content"><strong>2026-02-11</strong> — IB Direct. Deposited $1,500 in February. Active direct client of Carol.</div></td></tr>
+        <tr>
+          <td>2</td>
+          <td>Leonardo Guaran</td>
+          <td><span class="badge b-purple">Carol</span> <span class="badge b-green">IB</span></td>
+          <td>Colombia</td>
+          <td>$1,120</td>
+          <td><span class="dot dot-blue"></span><span class="badge b-blue">Funded $1,120</span></td>
+          <td>Push additional deposit</td>
+          <td><span class="notes-toggle" onclick="toggleNote(this)">›</span></td>
+        </tr>
+        <tr class="notes-row"><td colspan="8"><div class="notes-content"><strong>2026-05-14</strong> — Sub-IB of Carol. Deposited $1,120 in April. Push for additional deposit.</div></td></tr>
+      </tbody>
+    </table>
+
+  </div>
+
   <!-- ═══════════════════ BDM PIPELINE ═══════════════════ -->
   <div id="tab-bdm" class="panel">
+    <div class="section-title">Active BDM</div>
+    <table>
+      <thead>
+        <tr><th>Name</th><th>Owner</th><th>Direct Clients</th><th>Status</th><th>Focus</th><th>Notes</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Nestor Torres</td>
+          <td><span class="badge b-blue">Sebastián</span></td>
+          <td>Pedro Abadia, Manuel Nico, Felipe Márquez</td>
+          <td><span class="dot dot-green"></span><span class="badge b-green">Active</span></td>
+          <td>Close Pedro Abadia $600K+ deal</td>
+          <td><span class="notes-toggle" onclick="toggleNote(this)">›</span></td>
+        </tr>
+        <tr class="notes-row"><td colspan="6"><div class="notes-content"><strong>2026-05-15</strong> — Primary BDM. Managing high-value prospects: Pedro Abadia ($600K+ potential, meeting May 19), Manuel Nico (Spanish traders, at-risk churn, needs VT competitive response), Felipe Márquez (under evaluation). Key focus: close Pedro deal on May 19.</div></td></tr>
+      </tbody>
+    </table>
+
     <div class="section-title">Hiring Pipeline</div>
     <table>
       <thead>
@@ -445,7 +446,7 @@ tbody tr:nth-child(even):hover td { background: #f0f4f8; }
         <tr class="notes-row"><td colspan="9"><div class="notes-content"><strong>2026-05-15</strong> — Call scheduled Friday 16 May, 10–11 AM Colombia time. Key conditions: (1) Margin account roadmap with deadline, (2) Book B revenue share details coming Monday. Awaiting Nishil response on both. High probability of close.<br><br><strong>2026-05-14</strong> — Advanced negotiation. Brings $300K+ DOO portfolio. Tomorrow 11am Colombia — close it.</div></td></tr>
         <tr>
           <td>2</td><td>Alexander Perazzolo</td>
-          <td><span class="badge b-purple">Nishil</span></td>
+          <td><span class="badge b-blue">Sebastián</span></td>
           <td>Brazil focus — 10-20 clients/3mo</td>
           <td><span class="dot dot-orange"></span><span class="badge b-orange">Onboarding</span></td>
           <td>Senior BDM</td><td>$1,250/mo</td>
@@ -455,7 +456,7 @@ tbody tr:nth-child(even):hover td { background: #f0f4f8; }
         <tr class="notes-row"><td colspan="9"><div class="notes-content"><strong>2026-05-15</strong> — Responded to profile questionnaire. Relational/networking approach, crypto background, forex/CFD/IB basics. Projects 10–20 active clients in first 3 months. Onboarding starts Saturday 17 May.<br><br><strong>2026-05-14</strong> — Requested by Nishil Patel. Meeting tomorrow. Strong senior profile.</div></td></tr>
         <tr>
           <td>3</td><td>Diego Fernández Badilla</td>
-          <td><span class="badge b-purple">Nishil</span></td>
+          <td><span class="badge b-blue">Sebastián</span></td>
           <td>LATAM focus</td>
           <td><span class="dot dot-orange"></span><span class="badge b-orange">Meeting pending</span></td>
           <td>LATAM BDM</td><td>TBD</td>
@@ -474,7 +475,7 @@ tbody tr:nth-child(even):hover td { background: #f0f4f8; }
         </tr>
         <tr class="notes-row"><td colspan="9"><div class="notes-content"><strong>2026-05-14</strong> — Recently left Ingot Brokers. Awaiting his business proposal.</div></td></tr>
         <tr>
-          <td>6</td><td>Miguel Ángel Pinzón Velasco</td>
+          <td>5</td><td>Miguel Ángel Pinzón Velasco</td>
           <td><span class="badge b-blue">Sebastián</span></td>
           <td>Senior profile</td>
           <td><span class="dot dot-orange"></span><span class="badge b-orange">Negotiating</span></td>
@@ -484,7 +485,7 @@ tbody tr:nth-child(even):hover td { background: #f0f4f8; }
         </tr>
         <tr class="notes-row"><td colspan="9"><div class="notes-content"><strong>2026-05-15</strong> — Formal proposal sent. His counteroffer: base $4,500, higher CPA, $1/lot rebate, monthly override. Claude's counter drafted: base $4K, Tiers $4.5K/$5K/$6K, 2%–3% CPA, 0.6% quarterly override, $0.50/lot professional rebate. Formal doc updated & sent to Nishil for approval. Active negotiation.</div></td></tr>
         <tr>
-          <td>7</td><td>Samuel Tejero</td>
+          <td>6</td><td>Samuel Tejero</td>
           <td><span class="badge b-blue">Sebastián</span></td>
           <td>$15K–$25K/mo average</td>
           <td><span class="dot dot-orange"></span><span class="badge b-orange">Meeting sched.</span></td>
@@ -493,45 +494,31 @@ tbody tr:nth-child(even):hover td { background: #f0f4f8; }
           <td><span class="notes-toggle" onclick="toggleNote(this)">›</span></td>
         </tr>
         <tr class="notes-row"><td colspan="9"><div class="notes-content"><strong>2026-05-15</strong> — Personal contact of Sebastián. Meeting scheduled for next week. Average portfolio $15K–$25K monthly. Prospect for hire.</div></td></tr>
-        <tr>
-          <td>8</td><td>Augusto Rodríguez H.</td>
-          <td><span class="badge b-blue">Sebastián</span></td>
-          <td>—</td>
-          <td><span class="dot dot-gray"></span><span class="badge b-gray">Declined</span></td>
-          <td>BDM prospect</td><td>$1,250 + Tier 2 accel.</td>
-          <td>Closed — declined</td>
-          <td><span class="notes-toggle" onclick="toggleNote(this)">›</span></td>
-        </tr>
-        <tr class="notes-row"><td colspan="9"><div class="notes-content"><strong>2026-05-15</strong> — Received formal counteroffer (base $1,250, Tier 2 accelerated to $15K in 60 days). Declined — perceived digital weakness of broker as reason. Opportunity closed.</div></td></tr>
-        <tr>
-          <td>—</td><td>Alejandra Azambuya</td>
-          <td><span class="badge b-gray">—</span></td>
-          <td>—</td>
-          <td><span class="dot dot-gray"></span><span class="badge b-gray">❌ Lost to Vantage</span></td>
-          <td>—</td><td>—</td>
-          <td>Lesson: close faster</td>
-          <td><span class="notes-toggle" onclick="toggleNote(this)">›</span></td>
-        </tr>
-        <tr class="notes-row"><td colspan="9"><div class="notes-content"><strong>2026-05-14</strong> — Lost to Vantage. Lesson: close hiring faster — candidates evaluate multiple offers simultaneously.</div></td></tr>
       </tbody>
     </table>
 
-    <div class="section-title">Active Team</div>
+    <div class="section-title">Lost / Declined</div>
     <table>
       <thead>
-        <tr><th>Name</th><th>Role</th><th>Owner</th><th>Direct Clients</th><th>Deposits Generated</th><th>Focus This Week</th><th>Notes</th></tr>
+        <tr><th>Name</th><th>Owner</th><th>Status</th><th>Reason</th><th>Notes</th></tr>
       </thead>
       <tbody>
         <tr>
-          <td>Cristian Llanos</td>
-          <td><span class="badge b-blue">ASM</span></td>
+          <td>Augusto Rodríguez H.</td>
           <td><span class="badge b-blue">Sebastián</span></td>
-          <td>Javier Lemus, Armando Castro</td>
-          <td>$3,390+</td>
-          <td>Armando path to $2K · Javier $5K</td>
+          <td><span class="dot dot-gray"></span><span class="badge b-gray">Declined</span></td>
+          <td>Perceived weakness in platform UI</td>
           <td><span class="notes-toggle" onclick="toggleNote(this)">›</span></td>
         </tr>
-        <tr class="notes-row"><td colspan="7"><div class="notes-content"><strong>2026-05-15</strong> — Armando Castro: deposited $500 today (May 15). Plan: daily $500 deposits via Stripe until $2K total; then credit to trading account. Currently at $1,500 ($500 May 13 + $500 May 14 + $500 May 15). Pending wire confirmations Thu–Fri. Javier Lemus: $5K next deposit expected. Most active ASM.</div></td></tr>
+        <tr class="notes-row"><td colspan="5"><div class="notes-content"><strong>2026-05-15</strong> — Received formal counteroffer (base $1,250, Tier 2 accelerated to $15K in 60 days). Declined — perceived digital weakness of broker as reason. Opportunity closed.</div></td></tr>
+        <tr>
+          <td>Alejandra Azambuya</td>
+          <td><span class="badge b-blue">Sebastián</span></td>
+          <td><span class="dot dot-gray"></span><span class="badge b-gray">❌ Lost to Vantage</span></td>
+          <td>Lost to competitor</td>
+          <td><span class="notes-toggle" onclick="toggleNote(this)">›</span></td>
+        </tr>
+        <tr class="notes-row"><td colspan="5"><div class="notes-content"><strong>2026-05-14</strong> — Lost to Vantage. Lesson: close hiring faster — candidates evaluate multiple offers simultaneously.</div></td></tr>
       </tbody>
     </table>
   </div>
@@ -564,17 +551,7 @@ tbody tr:nth-child(even):hover td { background: #f0f4f8; }
         </tr>
         <tr class="notes-row"><td colspan="9"><div class="notes-content"><strong>2026-05-14</strong> — Most frequent depositor. 8 deposits via Meta Funnel. $5K next deposit committed. Keep engaged.</div></td></tr>
         <tr>
-          <td>3</td><td>Jaime</td>
-          <td><span class="badge b-purple">Carol / Cristian</span></td>
-          <td>Carol IB lead</td>
-          <td>Colombia</td><td>$2,000–$10,000</td>
-          <td><span class="dot dot-red"></span><span class="badge b-red">HOT</span></td>
-          <td>Personal call — close today</td>
-          <td><span class="notes-toggle" onclick="toggleNote(this)">›</span></td>
-        </tr>
-        <tr class="notes-row"><td colspan="9"><div class="notes-content"><strong>2026-05-14</strong> — Decision pending. Carol and Cristian both working this. Push hard — high potential first deposit.</div></td></tr>
-        <tr>
-          <td>4</td><td>Jhoan Lasso</td>
+          <td>3</td><td>Jhoan Lasso</td>
           <td><span class="badge b-blue">Cristian</span></td>
           <td>Personal account</td>
           <td>Colombia</td><td>Additional dep.</td>
@@ -584,7 +561,7 @@ tbody tr:nth-child(even):hover td { background: #f0f4f8; }
         </tr>
         <tr class="notes-row"><td colspan="9"><div class="notes-content"><strong>2026-05-14</strong> — Deposited $250 Mar 02. Meta Funnel lead. Push for additional deposit.</div></td></tr>
         <tr>
-          <td>5</td><td>Carlos Lozano</td>
+          <td>4</td><td>Carlos Lozano</td>
           <td><span class="badge b-blue">Cristian</span></td>
           <td>Personal account</td>
           <td>Colombia</td><td>Additional dep.</td>
@@ -594,7 +571,7 @@ tbody tr:nth-child(even):hover td { background: #f0f4f8; }
         </tr>
         <tr class="notes-row"><td colspan="9"><div class="notes-content"><strong>2026-05-14</strong> — Deposited $250 Mar 13. Meta Funnel. Push for additional.</div></td></tr>
         <tr>
-          <td>6</td><td>Carlos Barragán</td>
+          <td>5</td><td>Carlos Barragán</td>
           <td><span class="badge b-blue">Cristian</span></td>
           <td>Personal account</td>
           <td>Colombia</td><td>Additional dep.</td>
@@ -629,6 +606,7 @@ function toggleNote(btn) {
 
 // ─── DEPOSITS DATA ────────────────────────────────────────
 const DEPOSITS = [
+  {n:29, date:'May 18', month:'May', year:2026, asm:'Sebastian Garcia', client:'Mario Andino',                 ftd:false, source:'IB Direct',   country:'USA',      amount:419.62},
   {n:28, date:'May 15', month:'May', year:2026, asm:'Cristian Llanos',  client:'Armando Castro',               ftd:false, source:'IB Referral', country:'Bolivia',  amount:500.00},
   {n:27, date:'May 14', month:'May', year:2026, asm:'Cristian Llanos',  client:'Armando Castro',               ftd:false, source:'IB Referral', country:'Bolivia',  amount:500.00},
   {n:26, date:'May 13', month:'May', year:2026, asm:'Sebastian Garcia', client:'Mario Andino',                 ftd:false, source:'IB Direct',   country:'USA',      amount:296.91},
@@ -667,6 +645,112 @@ const ASM_ROLES = {
   'Pulse Operations': 'IB',
 };
 
+// ─── CALCULATE KPIs & MONTH CARDS ─────────────────────────
+function updateDashboard() {
+  // Calculate KPIs
+  const totalDep = DEPOSITS.reduce((s, d) => s + d.amount, 0);
+  const mayDeps = DEPOSITS.filter(d => d.month === 'May' && d.year === 2026).reduce((s, d) => s + d.amount, 0);
+  const totalFtds = DEPOSITS.filter(d => d.ftd).length;
+
+  document.getElementById('kpi-total').textContent = '$' + totalDep.toLocaleString('en-US', {maximumFractionDigits:0});
+  document.getElementById('kpi-may').textContent = '$' + mayDeps.toLocaleString('en-US', {maximumFractionDigits:0});
+  document.getElementById('kpi-ftds').textContent = totalFtds;
+
+  // Calculate Month Cards
+  const months = ['Feb', 'Mar', 'Apr', 'May'];
+  const monthData = {};
+  months.forEach(m => monthData[m] = { total: 0, deps: 0, ftds: 0 });
+
+  DEPOSITS.forEach(d => {
+    if (monthData[d.month]) {
+      monthData[d.month].total += d.amount;
+      monthData[d.month].deps++;
+      if (d.ftd) monthData[d.month].ftds++;
+    }
+  });
+
+  const bestMonth = months.reduce((best, m) =>
+    monthData[m].total > monthData[best].total ? m : best
+  );
+
+  let html = '';
+  months.forEach(m => {
+    const data = monthData[m];
+    const isBest = m === bestMonth && m !== 'May';
+    const isActive = m === 'May';
+    const className = isActive ? 'active-month' : (isBest ? 'best-month' : '');
+    const emoji = isActive ? ' 🔄' : '';
+    html += `<div class="month-card ${className}">
+      <div class="mc-label">${m} 2026${emoji}</div>
+      <div class="mc-amount">$${data.total.toLocaleString('en-US', {maximumFractionDigits:0})}</div>
+      <div class="mc-meta">${data.deps} deposit${data.deps !== 1 ? 's' : ''}</div>
+      <div class="mc-ftd">${data.ftds} FTD${data.ftds !== 1 ? 's' : ''}</div>
+    </div>`;
+  });
+
+  html += `<div class="month-card future">
+    <div class="mc-label">Jun</div>
+    <div class="mc-amount future-amt">—</div>
+    <div class="mc-meta" style="color:#e2e8f0;">—</div>
+  </div>
+  <div class="month-card future">
+    <div class="mc-label">Jul–Dec</div>
+    <div class="mc-amount future-amt">—</div>
+    <div class="mc-meta" style="color:#e2e8f0;">—</div>
+  </div>`;
+
+  document.getElementById('month-grid').innerHTML = html;
+
+  // Calculate Stats
+  const uniqueClients = [...new Set(DEPOSITS.map(d => d.client))].length;
+  const avgDepsPerClient = uniqueClients > 0 ? (DEPOSITS.length / uniqueClients).toFixed(2) : 0;
+  const avgDepSize = DEPOSITS.length > 0 ? totalDep / DEPOSITS.length : 0;
+
+  document.getElementById('stat-ftds').textContent = totalFtds;
+  document.getElementById('stat-deps').textContent = DEPOSITS.length;
+  document.getElementById('stat-avg-deps').textContent = avgDepsPerClient + 'x';
+  document.getElementById('stat-avg-size').textContent = '$' + avgDepSize.toLocaleString('en-US', {maximumFractionDigits:0});
+
+  // Update Active IBs Portfolio
+  updateActiveIBsPortfolio();
+}
+
+function updateActiveIBsPortfolio() {
+  const ibs = {
+    'Pulse Operations': 0,
+    'Carol Rodriguez': 0,
+    'Mario Andino': 0
+  };
+
+  DEPOSITS.forEach(d => {
+    if (d.source === 'IB Direct' && d.client === 'Pulse Operations') ibs['Pulse Operations'] += d.amount;
+    if (d.source === 'IB Direct' && d.client === 'Mario Andino') ibs['Mario Andino'] += d.amount;
+    if (d.source === 'IB Referral' && d.client === 'Juan Alvira') ibs['Carol Rodriguez'] += d.amount;
+    if (d.source === 'IB Direct' && d.client === 'Carol Rodriguez') ibs['Carol Rodriguez'] += d.amount;
+  });
+
+  // Update table rows ONLY in Active IBs table
+  const activeIBsTable = document.getElementById('active-ibs-table');
+  if (!activeIBsTable) return;
+
+  const allRows = Array.from(activeIBsTable.querySelectorAll('tbody tr'));
+
+  allRows.forEach(row => {
+    const text = row.textContent;
+    const cells = row.querySelectorAll('td');
+
+    if (text.includes('Pulse Operations') && !text.includes('Carol') && cells[3]) {
+      cells[3].textContent = '$' + ibs['Pulse Operations'].toLocaleString('en-US', {maximumFractionDigits:0}) + '+';
+    }
+    if (text.includes('Carol Rodriguez') && cells[3]) {
+      cells[3].textContent = '$' + ibs['Carol Rodriguez'].toLocaleString('en-US', {maximumFractionDigits:0}) + '+';
+    }
+    if (text.includes('Mario Andino') && !text.includes('Cristian') && cells[3]) {
+      cells[3].textContent = '$' + ibs['Mario Andino'].toLocaleString('en-US', {maximumFractionDigits:0}) + '+';
+    }
+  });
+}
+
 // ─── DEPOSIT REGISTER TABLE ───────────────────────────────
 function renderDeposits(rows) {
   const tbody = document.getElementById('dep-body');
@@ -685,6 +769,7 @@ function renderDeposits(rows) {
   `).join('');
 }
 renderDeposits(DEPOSITS);
+updateDashboard();
 
 function searchDeposits(q) {
   const lq = q.toLowerCase();
