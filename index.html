@@ -317,7 +317,7 @@ tbody tr:nth-child(even):hover td { background: #f0f4f8; }
           <td>1</td>
           <td>Pulse Operations</td>
           <td><span class="badge b-blue">Sebastián</span></td>
-          <td>$2,500+</td>
+          <td>$500+</td>
           <td>LATAM</td>
           <td>No referrals yet</td>
           <td><span class="dot dot-green"></span><span class="badge b-green">Active (funded)</span></td>
@@ -329,9 +329,9 @@ tbody tr:nth-child(even):hover td { background: #f0f4f8; }
           <td>2</td>
           <td>Carol Rodriguez</td>
           <td><span class="badge b-blue">Sebastián</span></td>
-          <td>$2,500+</td>
+          <td>$2,620+</td>
           <td>Colombia</td>
-          <td>Juan Alvira ($1,500)</td>
+          <td>Juan Alvira ($1,500) + Leonardo Guaran ($1,120)</td>
           <td><span class="dot dot-green"></span><span class="badge b-green">Active (funded)</span></td>
           <td>Grow referral book</td>
           <td><span class="notes-toggle" onclick="toggleNote(this)">›</span></td>
@@ -723,10 +723,15 @@ function updateActiveIBsPortfolio() {
   };
 
   DEPOSITS.forEach(d => {
-    if (d.source === 'IB Direct' && d.client === 'Pulse Operations') ibs['Pulse Operations'] += d.amount;
+    // Pulse Operations: only deposits where asm is Pulse Operations
+    if (d.asm === 'Pulse Operations') ibs['Pulse Operations'] += d.amount;
+
+    // Carol Rodriguez: Juan Alvira + Leonardo Guaran referrals
+    if (d.client === 'Juan Alvira') ibs['Carol Rodriguez'] += d.amount;
+    if (d.client === 'Leonardo Guaran') ibs['Carol Rodriguez'] += d.amount;
+
+    // Mario Andino: all IB Direct deposits
     if (d.source === 'IB Direct' && d.client === 'Mario Andino') ibs['Mario Andino'] += d.amount;
-    if (d.source === 'IB Referral' && d.client === 'Juan Alvira') ibs['Carol Rodriguez'] += d.amount;
-    if (d.source === 'IB Direct' && d.client === 'Carol Rodriguez') ibs['Carol Rodriguez'] += d.amount;
   });
 
   // Update table rows ONLY in Active IBs table
