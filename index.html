@@ -963,31 +963,56 @@ function filterRanking(period, btn) {
 
 // ─── TODAY BAR ────────────────────────────────────────────
 function buildTodayBar(deposits) {
-  const now = new Date();
   const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  const todayMonth = months[now.getMonth()];
-  const todayDay   = now.getDate();
-  const todayYear  = now.getFullYear();
-  const todayISO   = now.toISOString().slice(0,10); // e.g. "2026-05-26"
 
-  // Today's deposits
-  const todayDeps = deposits.filter(d =>
-    d.month === todayMonth && parseInt(d.date.split(' ')[1]) === todayDay && d.year === todayYear
-  );
+  // Find most recent date across ALL notes in the HTML (format: YYYY-MM-DD)
+  const allDates = [];
+  document.querySelectorAll('.notes-content strong').forEach(el => {
+    if (/^\d{4}-\d{2}-\d{2}$/.test(el.textContent)) allDates.push(el.textContent);
+  });
+  // Also check deposits
+  deposits.forEach(d => {
+    const parts = d.date.split(' ');
+    const mIdx = months.indexOf(parts[0]);
+    if (mIdx >= 0) {
+      const iso = `${d.year}-${String(mIdx+1).padStart(2,'0')}-${String(parts[1]).padStart(2,'0')}`;
+      allDates.push(iso);
+    }
+  });
 
-  // Today's notes in HTML (scan for <strong>YYYY-MM-DD</strong>)
-  const tabNoteMap = {
-    'ib':  'IB Funnel',
-    'bdm': 'BDM Pipeline',
-    'asm': 'ASM'
-  };
+  allDates.sort().reverse();
+  const latestISO = allDates[0] || '';
+  if (!latestISO) return;
+
+  // Parse latestISO for label
+  const [yr, mo, dy] = latestISO.split('-');
+  const monthName = months[parseInt(mo)-1];
+  const now = new Date();
+  const nowISO = now.toISOString().slice(0,10);
+  const yesterdayISO = new Date(now - 86400000).toISOString().slice(0,10);
+  let dayLabel = latestISO === nowISO ? 'Today' : latestISO === yesterdayISO ? 'Yesterday' : `${monthName} ${parseInt(dy)}`;
+
+  // Update label in bar
+  const labelEl = document.querySelector('.today-label');
+  if (labelEl) labelEl.textContent = `📅 ${dayLabel} — ${monthName} ${parseInt(dy)}`;
+
+  // Deposits from latest date
+  const latestDeps = deposits.filter(d => {
+    const parts = d.date.split(' ');
+    const mIdx = months.indexOf(parts[0]);
+    if (mIdx < 0) return false;
+    const iso = `${d.year}-${String(mIdx+1).padStart(2,'0')}-${String(parts[1]).padStart(2,'0')}`;
+    return iso === latestISO;
+  });
+
+  // Tabs with notes from latest date
+  const tabNoteMap = { 'ib': 'IB Funnel', 'bdm': 'BDM Pipeline', 'asm': 'ASM' };
   const noteTabs = [];
   Object.keys(tabNoteMap).forEach(tabId => {
     const panel = document.getElementById('tab-' + tabId);
     if (!panel) return;
-    if (panel.innerHTML.includes('<strong>' + todayISO + '</strong>')) {
+    if (panel.innerHTML.includes('<strong>' + latestISO + '</strong>')) {
       noteTabs.push(tabNoteMap[tabId]);
-      // Add NEW dot to tab button
       const tabBtn = [...document.querySelectorAll('.tab')].find(t =>
         t.getAttribute('onclick') && t.getAttribute('onclick').includes("'" + tabId + "'")
       );
@@ -999,8 +1024,7 @@ function buildTodayBar(deposits) {
     }
   });
 
-  // Add NEW dot to Deposits tab if today's deposits exist
-  if (todayDeps.length > 0) {
+  if (latestDeps.length > 0) {
     const depTab = [...document.querySelectorAll('.tab')].find(t =>
       t.getAttribute('onclick') && t.getAttribute('onclick').includes("'deposits'")
     );
@@ -1015,22 +1039,18 @@ function buildTodayBar(deposits) {
   if (!container) return;
 
   let html = '';
-
-  // Deposit pills
-  todayDeps.forEach(d => {
+  latestDeps.forEach(d => {
     html += `<div class="today-item">
       <span>${d.client}</span>
       <span class="ti-amount">$${d.amount.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</span>
       <span class="ti-tag">${d.asm.split(' ')[0]} · ${d.source}</span>
     </div>`;
   });
-
-  // Pipeline update pills
   noteTabs.forEach(label => {
     html += `<div class="today-item"><span>📋 ${label} updated</span></div>`;
   });
 
-  if (!html) html = '<span class="today-empty">No activity recorded today yet</span>';
+  if (!html) html = '<span class="today-empty">No activity recorded</span>';
   container.innerHTML = html;
 }
 
