@@ -112,6 +112,22 @@ tbody tr:nth-child(even):hover td { background: #f0f4f8; }
 .search-bar { display: flex; align-items: center; margin-bottom: 8px; gap: 8px; }
 .search-input { padding: 5px 10px; border: 1px solid #e2e8f0; border-radius: 5px; font-size: 11px; width: 200px; outline: none; }
 .search-input:focus { border-color: #1a1a2e; }
+
+/* TODAY BLOCK */
+.today-bar { background: #1a1a2e; border-bottom: 1px solid #2d3748; padding: 6px 20px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.today-label { font-size: 9px; font-weight: 800; color: #f6ad55; text-transform: uppercase; letter-spacing: 0.8px; white-space: nowrap; }
+.today-items { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; flex: 1; }
+.today-item { background: #2d3748; border-radius: 4px; padding: 3px 8px; font-size: 10px; color: #e2e8f0; display: flex; align-items: center; gap: 5px; }
+.today-item .ti-amount { font-weight: 800; color: #68d391; }
+.today-item .ti-tag { font-size: 9px; color: #a0aec0; }
+.today-empty { font-size: 10px; color: #4a5568; font-style: italic; }
+.today-toggle { font-size: 9px; color: #4a5568; cursor: pointer; white-space: nowrap; padding: 2px 6px; border: 1px solid #2d3748; border-radius: 3px; }
+.today-toggle:hover { color: #a0aec0; border-color: #4a5568; }
+
+/* NEW DOT ON TABS */
+.tab { position: relative; }
+.tab-new-dot { position: absolute; top: 6px; right: 4px; width: 6px; height: 6px; background: #f6ad55; border-radius: 50%; animation: pulse 1.5s infinite; }
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.6;transform:scale(1.3)} }
 </style>
 </head>
 <body>
@@ -129,6 +145,13 @@ tbody tr:nth-child(even):hover td { background: #f0f4f8; }
   <div class="kpi"><div class="kpi-val" id="kpi-ftds">0</div><div class="kpi-lbl">Total FTDs</div></div>
   <div class="kpi"><div class="kpi-val">$200K</div><div class="kpi-lbl">May Target</div></div>
   <div class="kpi"><div class="kpi-val">$530K+</div><div class="kpi-lbl">Pipeline Potential</div></div>
+</div>
+
+<!-- TODAY BAR -->
+<div class="today-bar">
+  <div class="today-label">📅 Today</div>
+  <div class="today-items" id="today-items"><span class="today-empty">Loading...</span></div>
+  <div class="today-toggle" onclick="toggleTodayBar(this)">▾ hide</div>
 </div>
 
 <!-- TABS -->
@@ -874,6 +897,86 @@ function filterRanking(period, btn) {
   document.getElementById('ranking-container').innerHTML = html;
 }
 
+// ─── TODAY BAR ────────────────────────────────────────────
+function buildTodayBar(deposits) {
+  const now = new Date();
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const todayMonth = months[now.getMonth()];
+  const todayDay   = now.getDate();
+  const todayYear  = now.getFullYear();
+  const todayISO   = now.toISOString().slice(0,10); // e.g. "2026-05-26"
+
+  // Today's deposits
+  const todayDeps = deposits.filter(d =>
+    d.month === todayMonth && parseInt(d.date.split(' ')[1]) === todayDay && d.year === todayYear
+  );
+
+  // Today's notes in HTML (scan for <strong>YYYY-MM-DD</strong>)
+  const tabNoteMap = {
+    'ib':  'IB Funnel',
+    'bdm': 'BDM Pipeline',
+    'asm': 'ASM'
+  };
+  const noteTabs = [];
+  Object.keys(tabNoteMap).forEach(tabId => {
+    const panel = document.getElementById('tab-' + tabId);
+    if (!panel) return;
+    if (panel.innerHTML.includes('<strong>' + todayISO + '</strong>')) {
+      noteTabs.push(tabNoteMap[tabId]);
+      // Add NEW dot to tab button
+      const tabBtn = [...document.querySelectorAll('.tab')].find(t =>
+        t.getAttribute('onclick') && t.getAttribute('onclick').includes("'" + tabId + "'")
+      );
+      if (tabBtn && !tabBtn.querySelector('.tab-new-dot')) {
+        const dot = document.createElement('span');
+        dot.className = 'tab-new-dot';
+        tabBtn.appendChild(dot);
+      }
+    }
+  });
+
+  // Add NEW dot to Deposits tab if today's deposits exist
+  if (todayDeps.length > 0) {
+    const depTab = [...document.querySelectorAll('.tab')].find(t =>
+      t.getAttribute('onclick') && t.getAttribute('onclick').includes("'deposits'")
+    );
+    if (depTab && !depTab.querySelector('.tab-new-dot')) {
+      const dot = document.createElement('span');
+      dot.className = 'tab-new-dot';
+      depTab.appendChild(dot);
+    }
+  }
+
+  const container = document.getElementById('today-items');
+  if (!container) return;
+
+  let html = '';
+
+  // Deposit pills
+  todayDeps.forEach(d => {
+    html += `<div class="today-item">
+      <span>${d.client}</span>
+      <span class="ti-amount">$${d.amount.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</span>
+      <span class="ti-tag">${d.asm.split(' ')[0]} · ${d.source}</span>
+    </div>`;
+  });
+
+  // Pipeline update pills
+  noteTabs.forEach(label => {
+    html += `<div class="today-item"><span>📋 ${label} updated</span></div>`;
+  });
+
+  if (!html) html = '<span class="today-empty">No activity recorded today yet</span>';
+  container.innerHTML = html;
+}
+
+function toggleTodayBar(btn) {
+  const items = document.getElementById('today-items');
+  const hidden = items.style.display === 'none';
+  items.style.display = hidden ? 'flex' : 'none';
+  btn.textContent = hidden ? '▾ hide' : '▸ show';
+}
+
 // ─── LOAD DATA FROM JSON ─────────────────────────────────
 fetch('./data/deposits.json?t=' + Date.now())
   .then(r => r.json())
@@ -882,12 +985,13 @@ fetch('./data/deposits.json?t=' + Date.now())
     renderDeposits(DEPOSITS);
     updateDashboard();
     filterRanking('all', document.querySelector('.period-btn'));
+    buildTodayBar(DEPOSITS);
   })
   .catch(() => {
-    // fallback: run with empty array if fetch fails
     renderDeposits([]);
     updateDashboard();
     filterRanking('all', document.querySelector('.period-btn'));
+    buildTodayBar([]);
   });
 </script>
 </body>
