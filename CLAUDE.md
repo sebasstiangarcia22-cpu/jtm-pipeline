@@ -105,6 +105,16 @@ En `.kpi-bar`, actualizar manualmente cuando aplique:
 - **May So Far** — solo si el depósito es del mes en curso
 - **Total FTDs** — solo si `ftd: true`
 
+### 4. Actualizar notas del cliente en IB Funnel / ASM / BDM
+
+**REGLA OBLIGATORIA**: Siempre que se registre un depósito, buscar al cliente en las tablas con notas expandibles (IB Funnel Active IBs, ASM Cristian, BDM Active) y agregar una entrada al inicio de su `<div class="notes-content">` con este formato:
+
+```html
+<strong>YYYY-MM-DD</strong> — Deposit: $X,XXX.XX (IB Direct / IB Referral / Meta Funnel / Direct). [Nota adicional si aplica]
+```
+
+Si el cliente aparece como IB, también actualizar el campo "Direct Clients" (portfolio acumulado) si el monto acumulado cambió significativamente.
+
 ---
 
 ## Cómo actualizar notas en IB Funnel / BDM Pipeline / ASM Cristian
