@@ -759,16 +759,23 @@ const ASM_ROLES = {
 // ─── CALCULATE KPIs & MONTH CARDS ─────────────────────────
 function updateDashboard() {
   // Calculate KPIs
+  const _months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const _curMonth = _months[new Date().getMonth()];
   const totalDep = DEPOSITS.reduce((s, d) => s + d.amount, 0);
-  const mayDeps = DEPOSITS.filter(d => d.month === 'May' && d.year === 2026).reduce((s, d) => s + d.amount, 0);
+  const curMonthDeps = DEPOSITS.filter(d => d.month === _curMonth && d.year === new Date().getFullYear()).reduce((s, d) => s + d.amount, 0);
   const totalFtds = DEPOSITS.filter(d => d.ftd).length;
 
   document.getElementById('kpi-total').textContent = '$' + totalDep.toLocaleString('en-US', {maximumFractionDigits:0});
-  document.getElementById('kpi-may').textContent = '$' + mayDeps.toLocaleString('en-US', {maximumFractionDigits:0});
+  document.getElementById('kpi-may').textContent = '$' + curMonthDeps.toLocaleString('en-US', {maximumFractionDigits:0});
   document.getElementById('kpi-ftds').textContent = totalFtds;
+  const kpiMayLbl = document.querySelector('#kpi-may + .kpi-lbl') || document.getElementById('kpi-may').nextElementSibling;
+  if (kpiMayLbl) kpiMayLbl.textContent = _curMonth + ' So Far';
 
-  // Calculate Month Cards
-  const months = ['Feb', 'Mar', 'Apr', 'May'];
+  // Calculate Month Cards — dynamic: show Feb through current month
+  const _allMonths = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const _now = new Date();
+  const _curIdx = _now.getMonth(); // 0-based
+  const months = _allMonths.slice(1, _curIdx + 1); // Feb onwards up to current month
   const monthData = {};
   months.forEach(m => monthData[m] = { total: 0, deps: 0, ftds: 0 });
 
@@ -787,8 +794,8 @@ function updateDashboard() {
   let html = '';
   months.forEach(m => {
     const data = monthData[m];
-    const isBest = m === bestMonth && m !== 'May';
-    const isActive = m === 'May';
+    const isActive = m === _allMonths[_curIdx];
+    const isBest = m === bestMonth && !isActive;
     const className = isActive ? 'active-month' : (isBest ? 'best-month' : '');
     const emoji = isActive ? ' 🔄' : '';
     html += `<div class="month-card ${className}">
@@ -800,11 +807,6 @@ function updateDashboard() {
   });
 
   html += `<div class="month-card future">
-    <div class="mc-label">Jun</div>
-    <div class="mc-amount future-amt">—</div>
-    <div class="mc-meta" style="color:#e2e8f0;">—</div>
-  </div>
-  <div class="month-card future">
     <div class="mc-label">Jul–Dec</div>
     <div class="mc-amount future-amt">—</div>
     <div class="mc-meta" style="color:#e2e8f0;">—</div>
