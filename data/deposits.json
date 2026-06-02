@@ -1,4 +1,5 @@
 [
+  {"n":37, "date":"Jun 2",  "month":"Jun", "year":2026, "asm":"Sebastian Garcia",  "client":"Fredu Cajamarca",                 "ftd":true,  "source":"IB Direct",   "country":"Colombia", "amount":3000.00},
   {"n":36, "date":"Jun 1",  "month":"Jun", "year":2026, "asm":"Sebastian Garcia",  "client":"Mario Andino",                    "ftd":false, "source":"IB Direct",   "country":"USA",      "amount":3382.50},
   {"n":35, "date":"Jun 1",  "month":"Jun", "year":2026, "asm":"Nestor Torres",     "client":"Diana Carolina Longas Jaramillo", "ftd":true,  "source":"IB Direct",   "country":"Colombia", "amount":450.00},
   {"n":34, "date":"May 31", "month":"May", "year":2026, "asm":"Sebastian Garcia",  "client":"Mario Andino",                    "ftd":false, "source":"IB Direct",   "country":"USA",      "amount":171.00},
