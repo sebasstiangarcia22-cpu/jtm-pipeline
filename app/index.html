@@ -30,6 +30,11 @@
     .num.gross { color:var(--blue); }
     .badge { font-size:11px; padding:2px 8px; border-radius:20px; background:#21262d; color:var(--mut); }
     .badge.former { background:#2d2418; color:var(--orange); }
+    .period-bar { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px; }
+    .period-btn { padding:5px 13px; border:1px solid var(--line); background:var(--card); border-radius:20px;
+                  font-size:12px; color:var(--mut); cursor:pointer; transition:all .12s; }
+    .period-btn:hover { color:var(--txt); border-color:var(--mut); }
+    .period-btn.active { background:var(--blue); color:#fff; border-color:var(--blue); }
     .state { color:var(--mut); font-size:13px; padding:16px; }
     .search { width:280px; padding:8px 12px; margin-bottom:12px; background:var(--card);
               border:1px solid var(--line); border-radius:8px; color:var(--txt); font-size:13px; outline:none; }
@@ -86,7 +91,8 @@
       <div id="months" class="month-grid"><div class="state">Loading…</div></div>
     </div>
     <div class="section">
-      <h2>Commercials</h2>
+      <h2>Rankings</h2>
+      <div class="period-bar" id="period-bar"></div>
       <div id="bdm"><div class="state">Loading…</div></div>
     </div>
     <div class="section">
