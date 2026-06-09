@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JT Markets — Panel</title>
+  <style>
+    :root { --bg:#0e1116; --card:#161b22; --line:#222a35; --txt:#e6edf3; --mut:#8b949e;
+            --green:#2ea043; --blue:#388bfd; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--txt);
+           font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+    /* Login */
+    .login-wrap { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px; }
+    .login-card { background:var(--card); border:1px solid var(--line); border-radius:14px;
+                  padding:32px 28px; width:100%; max-width:360px; }
+    .login-card img { height:34px; display:block; margin:0 auto 22px; }
+    .login-card h1 { font-size:16px; font-weight:600; text-align:center; margin:0 0 20px; color:var(--mut); }
+    .field { margin-bottom:14px; }
+    .field label { display:block; font-size:12px; color:var(--mut); margin-bottom:5px; }
+    .field input { width:100%; padding:10px 12px; background:#0e1116; border:1px solid var(--line);
+                   border-radius:8px; color:var(--txt); font-size:14px; outline:none; }
+    .field input:focus { border-color:var(--blue); }
+    .btn { width:100%; padding:11px; background:var(--blue); color:#fff; border:none; border-radius:8px;
+           font-size:14px; font-weight:600; cursor:pointer; margin-top:4px; }
+    .btn:hover { background:#2f7ae0; }
+    .btn:disabled { opacity:.6; cursor:default; }
+    .msg { font-size:13px; margin-top:12px; text-align:center; min-height:18px; }
+    .msg.err { color:#f85149; } .msg.ok { color:var(--green); }
+    /* Panel */
+    .hidden { display:none; }
+    header { padding:16px 24px; border-bottom:1px solid var(--line); display:flex;
+             align-items:center; justify-content:space-between; }
+    header img { height:30px; }
+    .who { display:flex; align-items:center; gap:12px; font-size:14px; }
+    .badge { font-size:11px; padding:2px 9px; border-radius:20px; background:#21262d; color:var(--mut); }
+    .logout { background:none; border:1px solid var(--line); color:var(--mut); padding:6px 12px;
+              border-radius:8px; font-size:13px; cursor:pointer; }
+    .logout:hover { color:var(--txt); border-color:var(--mut); }
+    .wrap { padding:28px 24px; max-width:1000px; margin:0 auto; }
+    .wrap h2 { font-size:14px; text-transform:uppercase; letter-spacing:.5px; color:var(--mut); }
+    .placeholder { background:var(--card); border:1px dashed var(--line); border-radius:12px;
+                   padding:40px; text-align:center; color:var(--mut); margin-top:14px; }
+  </style>
+</head>
+<body>
+  <!-- LOGIN -->
+  <div id="login" class="login-wrap">
+    <form class="login-card" id="login-form">
+      <img src="logo.png" alt="JT Markets" />
+      <h1>Panel de agentes</h1>
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="email" autocomplete="username" required />
+      </div>
+      <div class="field">
+        <label>Contraseña</label>
+        <input type="password" id="password" autocomplete="current-password" required />
+      </div>
+      <button class="btn" type="submit" id="login-btn">Entrar</button>
+      <div class="msg" id="login-msg"></div>
+    </form>
+  </div>
+
+  <!-- PANEL (after login) -->
+  <div id="panel" class="hidden">
+    <header>
+      <img src="logo.png" alt="JT Markets" />
+      <div class="who">
+        <span id="who-name"></span>
+        <span class="badge" id="who-role"></span>
+        <button class="logout" id="logout">Salir</button>
+      </div>
+    </header>
+    <div class="wrap">
+      <h2>Mi Pipeline</h2>
+      <div class="placeholder">Aquí irá tu pipeline y el reporte diario (próximo paso).</div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script src="panel.js"></script>
+</body>
+</html>
