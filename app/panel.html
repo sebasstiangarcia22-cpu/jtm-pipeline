@@ -52,6 +52,19 @@
     .b-red{background:#3a1d1d;color:#f87171}.b-orange{background:#3a2a14;color:#fb923c}.b-green{background:#16301f;color:#4ade80}
     .b-blue{background:#15233a;color:#60a5fa}.b-yellow{background:#332b10;color:#facc15}.b-gray{background:#262b33;color:#9ca3af}
     .state { color:var(--mut); font-size:13px; padding:16px; }
+    tbody tr { cursor:pointer; } tbody tr:hover td { background:#1b2230; }
+    /* Edit modal */
+    .modal { position:fixed; inset:0; background:rgba(0,0,0,.6); display:flex; align-items:center; justify-content:center; padding:20px; z-index:50; }
+    .modal-card { background:var(--card); border:1px solid var(--line); border-radius:14px; width:100%; max-width:520px; }
+    .modal-head { display:flex; justify-content:space-between; align-items:center; padding:16px 20px; border-bottom:1px solid var(--line); }
+    .modal-head strong { font-size:15px; }
+    .modal-head .x { background:none; border:none; color:var(--mut); font-size:16px; cursor:pointer; }
+    .mform { padding:18px 20px; display:grid; grid-template-columns:repeat(2,1fr); gap:13px; }
+    .mform .full { grid-column:1 / -1; }
+    .mform label { display:block; font-size:11px; color:var(--mut); margin-bottom:4px; text-transform:uppercase; letter-spacing:.4px; }
+    .mform input, .mform select { width:100%; padding:9px 11px; background:#0e1116; border:1px solid var(--line); border-radius:8px; color:var(--txt); font-size:14px; outline:none; }
+    .mform input:focus, .mform select:focus { border-color:var(--blue); }
+    .sig-head { font-size:11px; color:var(--blue); text-transform:uppercase; letter-spacing:.4px; border-top:1px solid var(--line); padding-top:13px; margin-top:2px; }
   </style>
 </head>
 <body>
@@ -96,6 +109,27 @@
           <span class="msg err" id="add-msg" style="margin-left:10px"></span></div>
       </form>
       <div id="pipeline"><div class="state">Cargando…</div></div>
+    </div>
+
+    <!-- Edit modal -->
+    <div id="edit-modal" class="modal hidden">
+      <div class="modal-card">
+        <div class="modal-head"><strong id="edit-title">Editar prospecto</strong><button class="x" id="edit-close">✕</button></div>
+        <div class="mform">
+          <div><label>Status</label><select id="e-status"></select></div>
+          <div><label>Deal size (USD)</label><input id="e-deal" type="number" step="0.01" /></div>
+          <div><label>Próximo paso</label><input id="e-next" /></div>
+          <div><label>Fecha próximo paso</label><input id="e-date" type="date" /></div>
+          <div class="full sig-head">Señal de depósito (opcional)</div>
+          <div><label>Monto</label><input id="e-sig-amt" type="number" step="0.01" /></div>
+          <div><label>Fecha esperada</label><input id="e-sig-date" type="date" /></div>
+          <div class="full"><label>Tipo</label><select id="e-sig-type">
+            <option value="">—</option><option value="new_ftd">Nuevo depósito (FTD)</option><option value="redeposit">Re-depósito</option>
+          </select></div>
+          <div class="full"><button class="btn-add" id="edit-save">Guardar cambios</button>
+            <span class="msg err" id="edit-msg" style="margin-left:10px"></span></div>
+        </div>
+      </div>
     </div>
   </div>
 
