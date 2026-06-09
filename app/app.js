@@ -24,6 +24,14 @@ async function load() {
   }
   const db = supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
 
+  // Log visit (fire-and-forget): IP + location + device
+  fetch('https://ipapi.co/json/').then((r) => r.json()).then((j) => {
+    db.rpc('log_visit', {
+      p_ip: j.ip || null, p_city: j.city || null, p_country: j.country_name || null,
+      p_ua: navigator.userAgent, p_path: location.pathname,
+    });
+  }).catch(() => {});
+
   // ---- KPIs ----
   const { data: kpi } = await db.rpc('public_kpis');
   if (kpi && kpi[0]) {
