@@ -10,37 +10,48 @@
     * { box-sizing:border-box; }
     body { margin:0; background:var(--bg); color:var(--txt);
            font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+    .hidden { display:none !important; }
     /* Login */
     .login-wrap { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px; }
-    .login-card { background:var(--card); border:1px solid var(--line); border-radius:14px;
-                  padding:32px 28px; width:100%; max-width:360px; }
+    .login-card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:32px 28px; width:100%; max-width:360px; }
     .login-card img { height:34px; display:block; margin:0 auto 22px; }
     .login-card h1 { font-size:16px; font-weight:600; text-align:center; margin:0 0 20px; color:var(--mut); }
     .field { margin-bottom:14px; }
     .field label { display:block; font-size:12px; color:var(--mut); margin-bottom:5px; }
-    .field input { width:100%; padding:10px 12px; background:#0e1116; border:1px solid var(--line);
-                   border-radius:8px; color:var(--txt); font-size:14px; outline:none; }
+    .field input { width:100%; padding:10px 12px; background:#0e1116; border:1px solid var(--line); border-radius:8px; color:var(--txt); font-size:14px; outline:none; }
     .field input:focus { border-color:var(--blue); }
-    .btn { width:100%; padding:11px; background:var(--blue); color:#fff; border:none; border-radius:8px;
-           font-size:14px; font-weight:600; cursor:pointer; margin-top:4px; }
-    .btn:hover { background:#2f7ae0; }
-    .btn:disabled { opacity:.6; cursor:default; }
+    .btn { width:100%; padding:11px; background:var(--blue); color:#fff; border:none; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; }
+    .btn:hover { background:#2f7ae0; } .btn:disabled { opacity:.6; cursor:default; }
     .msg { font-size:13px; margin-top:12px; text-align:center; min-height:18px; }
-    .msg.err { color:#f85149; } .msg.ok { color:var(--green); }
-    /* Panel */
-    .hidden { display:none; }
-    header { padding:16px 24px; border-bottom:1px solid var(--line); display:flex;
-             align-items:center; justify-content:space-between; }
+    .msg.err { color:#f85149; }
+    /* Header */
+    header { padding:16px 24px; border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between; }
     header img { height:30px; }
     .who { display:flex; align-items:center; gap:12px; font-size:14px; }
     .badge { font-size:11px; padding:2px 9px; border-radius:20px; background:#21262d; color:var(--mut); }
-    .logout { background:none; border:1px solid var(--line); color:var(--mut); padding:6px 12px;
-              border-radius:8px; font-size:13px; cursor:pointer; }
+    .logout { background:none; border:1px solid var(--line); color:var(--mut); padding:6px 12px; border-radius:8px; font-size:13px; cursor:pointer; }
     .logout:hover { color:var(--txt); border-color:var(--mut); }
-    .wrap { padding:28px 24px; max-width:1000px; margin:0 auto; }
-    .wrap h2 { font-size:14px; text-transform:uppercase; letter-spacing:.5px; color:var(--mut); }
-    .placeholder { background:var(--card); border:1px dashed var(--line); border-radius:12px;
-                   padding:40px; text-align:center; color:var(--mut); margin-top:14px; }
+    /* Pipeline */
+    .wrap { padding:28px 24px; max-width:1040px; margin:0 auto; }
+    .pipe-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+    .pipe-head h2 { margin:0; font-size:15px; }
+    .btn-add { background:var(--blue); color:#fff; border:none; border-radius:8px; padding:8px 14px; font-size:13px; font-weight:600; cursor:pointer; }
+    .btn-add:hover { background:#2f7ae0; }
+    .add-form { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:18px; margin-bottom:18px;
+                display:grid; grid-template-columns:repeat(2,1fr); gap:13px; }
+    .add-form .full { grid-column:1 / -1; }
+    .add-form label { display:block; font-size:11px; color:var(--mut); margin-bottom:4px; text-transform:uppercase; letter-spacing:.4px; }
+    .add-form input, .add-form select { width:100%; padding:9px 11px; background:#0e1116; border:1px solid var(--line); border-radius:8px; color:var(--txt); font-size:14px; outline:none; }
+    .add-form input:focus, .add-form select:focus { border-color:var(--blue); }
+    table { width:100%; border-collapse:collapse; background:var(--card); border:1px solid var(--line); border-radius:10px; overflow:hidden; font-size:13px; }
+    th { text-align:left; padding:10px 12px; font-size:11px; text-transform:uppercase; letter-spacing:.4px; color:var(--mut); border-bottom:1px solid var(--line); }
+    td { padding:10px 12px; border-bottom:1px solid var(--line); }
+    tr:last-child td { border-bottom:none; }
+    .num { text-align:right; font-variant-numeric:tabular-nums; }
+    .pill { font-size:11px; padding:2px 9px; border-radius:20px; white-space:nowrap; }
+    .b-red{background:#3a1d1d;color:#f87171}.b-orange{background:#3a2a14;color:#fb923c}.b-green{background:#16301f;color:#4ade80}
+    .b-blue{background:#15233a;color:#60a5fa}.b-yellow{background:#332b10;color:#facc15}.b-gray{background:#262b33;color:#9ca3af}
+    .state { color:var(--mut); font-size:13px; padding:16px; }
   </style>
 </head>
 <body>
@@ -49,20 +60,14 @@
     <form class="login-card" id="login-form">
       <img src="logo.png" alt="JT Markets" />
       <h1>Panel de agentes</h1>
-      <div class="field">
-        <label>Email</label>
-        <input type="email" id="email" autocomplete="username" required />
-      </div>
-      <div class="field">
-        <label>Contraseña</label>
-        <input type="password" id="password" autocomplete="current-password" required />
-      </div>
+      <div class="field"><label>Email</label><input type="email" id="email" autocomplete="username" required /></div>
+      <div class="field"><label>Contraseña</label><input type="password" id="password" autocomplete="current-password" required /></div>
       <button class="btn" type="submit" id="login-btn">Entrar</button>
       <div class="msg" id="login-msg"></div>
     </form>
   </div>
 
-  <!-- PANEL (after login) -->
+  <!-- PANEL -->
   <div id="panel" class="hidden">
     <header>
       <img src="logo.png" alt="JT Markets" />
@@ -73,8 +78,24 @@
       </div>
     </header>
     <div class="wrap">
-      <h2>Mi Pipeline</h2>
-      <div class="placeholder">Aquí irá tu pipeline y el reporte diario (próximo paso).</div>
+      <div class="pipe-head">
+        <h2>Mi Pipeline</h2>
+        <button class="btn-add" id="add-toggle">+ Agregar prospecto</button>
+      </div>
+      <form class="add-form hidden" id="add-form">
+        <div class="full"><label>Prospecto</label><input id="f-name" required /></div>
+        <div><label>País</label><input id="f-country" /></div>
+        <div><label>Fuente</label><select id="f-source">
+          <option>IB Direct</option><option>IB Referral</option><option>Meta Funnel</option><option>Direct</option>
+        </select></div>
+        <div><label>Status</label><select id="f-status"></select></div>
+        <div><label>Deal size (USD)</label><input id="f-deal" type="number" step="0.01" placeholder="0" /></div>
+        <div><label>Próximo paso</label><input id="f-next" placeholder="Ej: Llamar el lunes" /></div>
+        <div><label>Fecha próximo paso</label><input id="f-date" type="date" /></div>
+        <div class="full"><button class="btn-add" type="submit" id="save-btn">Guardar prospecto</button>
+          <span class="msg err" id="add-msg" style="margin-left:10px"></span></div>
+      </form>
+      <div id="pipeline"><div class="state">Cargando…</div></div>
     </div>
   </div>
 
