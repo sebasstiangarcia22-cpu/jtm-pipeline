@@ -134,19 +134,33 @@ $('edit-modal').addEventListener('click', (e) => { if (e.target.id === 'edit-mod
 $('edit-save').addEventListener('click', async () => {
   const id = $('edit-modal').dataset.id, status = $('e-status').value;
   const msg = $('edit-msg'), btn = $('edit-save');
+  const prev = rowsById[id] || {};
+  const sigAmt = $('e-sig-amt').value ? Number($('e-sig-amt').value) : null;
+  const sigDate = $('e-sig-date').value || null;
+  const sigType = $('e-sig-type').value || null;
   btn.disabled = true; msg.textContent = '';
   const { error } = await db.from('pipeline_entries').update({
     status, badge_color: STATUSES[status] || 'gray',
     deal_size: $('e-deal').value ? Number($('e-deal').value) : null,
     next_action: $('e-next').value.trim() || null,
     next_action_date: $('e-date').value || null,
-    deposit_signal_amount: $('e-sig-amt').value ? Number($('e-sig-amt').value) : null,
-    deposit_signal_date: $('e-sig-date').value || null,
-    deposit_signal_type: $('e-sig-type').value || null,
+    deposit_signal_amount: sigAmt,
+    deposit_signal_date: sigDate,
+    deposit_signal_type: sigType,
     updated_at: new Date().toISOString(),
   }).eq('id', id);
   btn.disabled = false;
   if (error) { msg.textContent = error.message; return; }
+  // If the deposit signal is new or changed, log it to the timeline (audit trail)
+  const sigChanged = sigAmt !== (prev.deposit_signal_amount ? Number(prev.deposit_signal_amount) : null)
+    || sigDate !== (prev.deposit_signal_date ?? null) || sigType !== (prev.deposit_signal_type ?? null);
+  if (sigAmt && sigChanged) {
+    const tipo = sigType === 'new_ftd' ? 'Nuevo depósito (FTD)' : sigType === 'redeposit' ? 'Re-depósito' : 'Depósito';
+    await db.from('notes').insert({
+      entity_type: 'pipeline', entity_id: id, author_id: me.id,
+      text_original: `💰 Señal de depósito: ${money(sigAmt)} — ${tipo}${sigDate ? ` — esperado para ${sigDate}` : ''}`,
+    });
+  }
   $('edit-modal').classList.add('hidden'); loadPipeline();
 });
 
