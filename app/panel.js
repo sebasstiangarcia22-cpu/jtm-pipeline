@@ -26,7 +26,14 @@ async function showPanel() {
   $('who-role').textContent = profile ? profile.role.toUpperCase() : '—';
   $('f-status').innerHTML = Object.keys(STATUSES).map((s) => `<option>${s}</option>`).join('');
   $('login').classList.add('hidden'); $('panel').classList.remove('hidden');
-  if (me && (me.role === 'gm' || me.role === 'admin')) $('admin-tabs').classList.remove('hidden');
+  const canViewAll = me && ['gm', 'admin', 'viewer'].includes(me.role);
+  if (canViewAll) $('admin-tabs').classList.remove('hidden');
+  if (me && me.role === 'viewer') {
+    // Viewers (Nishil/management) are read-only: team view only, no own pipeline
+    $('tab-mine').classList.add('hidden');
+    $('tab-team').click();
+    return;
+  }
   await loadPipeline();          // fills rowsById (prospect names for the summary)
   loadDailyReport();
 }
@@ -71,22 +78,73 @@ async function loadTeam() {
       <div style="white-space:pre-wrap;margin-top:8px;font-size:13px;color:var(--mut);line-height:1.6">${r.activity_summary || ''}${r.commitments ? '\n— ' + r.commitments : ''}</div></div>`;
   }).join('') || '<div class="state">Sin agentes.</div>';
 
-  // Team pipeline (RLS gives admin everything)
+  // Team pipeline (RLS: admin and viewers see everything)
+  const isAdmin = ['gm', 'admin'].includes(me.role);
   const { data: rows } = await db.from('pipeline_entries')
     .select('id, prospect_name, country, status, badge_color, deal_size, next_action, next_action_date, deposit_signal_amount, deposit_signal_date, deposit_signal_type, source, owner:profiles!pipeline_entries_owner_id_fkey(full_name)')
     .order('updated_at', { ascending: false });
-  if (!rows || !rows.length) { $('team-pipeline').innerHTML = '<div class="state">Sin prospectos aún.</div>'; return; }
+  if (!rows || !rows.length) {
+    $('funnel-summary').innerHTML = ''; $('team-pipeline').innerHTML = '<div class="state">Sin prospectos aún.</div>';
+    $('team-feed').innerHTML = '<div class="state">Sin actividad.</div>'; return;
+  }
   rows.forEach((r) => { rowsById[r.id] = r; });
+
+  // Funnel summary: counts by status
+  const counts = {};
+  rows.forEach((r) => { const k = r.status || '—'; (counts[k] ||= { n: 0, color: r.badge_color || 'gray' }).n++; });
+  $('funnel-summary').innerHTML = Object.entries(counts)
+    .sort((a, b) => b[1].n - a[1].n)
+    .map(([s, c]) => `<div style="background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 16px;text-align:center">
+      <div style="font-size:20px;font-weight:800">${c.n}</div>
+      <span class="pill b-${c.color}">${s}</span></div>`).join('');
+
+  // Pipeline table with expandable evolution (old-dashboard style)
   $('team-pipeline').innerHTML = `<table><thead><tr>
-    <th>Prospecto</th><th>Agente</th><th>Status</th><th class="num">Deal size</th><th>Próximo paso</th><th>Fecha</th>
-    </tr></thead><tbody>${rows.map((r) => `<tr data-id="${r.id}">
+    <th></th><th>Prospecto</th><th>Agente</th><th>Status</th><th class="num">Deal size</th><th>Próximo paso</th><th>Fecha</th>${isAdmin ? '<th></th>' : ''}
+    </tr></thead><tbody>${rows.map((r) => `<tr data-id="${r.id}" class="team-row">
+      <td style="color:var(--mut)">›</td>
       <td>${r.prospect_name}</td><td>${r.owner?.full_name || '—'}</td>
       <td><span class="pill b-${r.badge_color || 'gray'}">${r.status || '—'}</span></td>
       <td class="num">${r.deal_size ? money(r.deal_size) : '—'}</td>
       <td>${r.next_action || '—'}</td><td>${r.next_action_date || '—'}</td>
-    </tr>`).join('')}</tbody></table>`;
-  document.querySelectorAll('#team-pipeline tbody tr').forEach((tr) =>
-    tr.addEventListener('click', () => openEdit(tr.dataset.id)));
+      ${isAdmin ? `<td><a href="#" class="team-edit" data-id="${r.id}" style="color:var(--blue);font-size:12px">editar</a></td>` : ''}
+    </tr><tr class="notes-tr hidden" data-notes-for="${r.id}"><td></td><td colspan="${isAdmin ? 7 : 6}" style="background:#10151c"></td></tr>`).join('')}</tbody></table>`;
+
+  document.querySelectorAll('#team-pipeline .team-row').forEach((tr) =>
+    tr.addEventListener('click', () => toggleTeamNotes(tr.dataset.id)));
+  document.querySelectorAll('#team-pipeline .team-edit').forEach((a) =>
+    a.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); openEdit(a.dataset.id); }));
+
+  // Activity feed: latest notes across all prospects
+  const { data: feed } = await db.from('notes')
+    .select('note_date, text_original, entity_id, author:profiles!notes_author_id_fkey(full_name)')
+    .eq('entity_type', 'pipeline')
+    .order('created_at', { ascending: false }).limit(25);
+  $('team-feed').innerHTML = (feed || []).map((n) =>
+    `<div style="padding:9px 2px;border-bottom:1px solid var(--line);font-size:13px;line-height:1.5">
+      <strong style="color:var(--blue)">${n.note_date}</strong>
+      <span class="badge" style="margin:0 4px">${rowsById[n.entity_id]?.prospect_name || '—'}</span>
+      ${n.text_original} <span style="color:var(--mut);font-size:11px">· ${n.author?.full_name || ''}</span>
+    </div>`).join('') || '<div class="state">Sin actividad aún.</div>';
+}
+
+// Expand/collapse a prospect's evolution under its row
+async function toggleTeamNotes(id) {
+  const tr = document.querySelector(`tr[data-notes-for="${id}"]`);
+  if (!tr) return;
+  if (!tr.classList.contains('hidden')) { tr.classList.add('hidden'); return; }
+  const cell = tr.querySelector('td[colspan]');
+  cell.innerHTML = '<div class="state">Cargando evolución…</div>';
+  tr.classList.remove('hidden');
+  const { data: notes } = await db.from('notes')
+    .select('note_date, text_original, author:profiles!notes_author_id_fkey(full_name)')
+    .eq('entity_type', 'pipeline').eq('entity_id', id)
+    .order('created_at', { ascending: false });
+  cell.innerHTML = (notes || []).length
+    ? notes.map((n) => `<div style="padding:7px 6px;font-size:13px;line-height:1.5;border-bottom:1px solid var(--line)">
+        <strong style="color:var(--blue)">${n.note_date}</strong> — ${n.text_original}
+        <span style="color:var(--mut);font-size:11px">· ${n.author?.full_name || ''}</span></div>`).join('')
+    : '<div class="state">Sin notas aún.</div>';
 }
 
 // ---- Daily report ----
