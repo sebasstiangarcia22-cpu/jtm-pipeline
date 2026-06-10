@@ -27,6 +27,29 @@ async function showPanel() {
   $('f-status').innerHTML = Object.keys(STATUSES).map((s) => `<option>${s}</option>`).join('');
   $('login').classList.add('hidden'); $('panel').classList.remove('hidden');
   loadPipeline();
+  loadDailyReport();
+}
+
+// ---- Daily report ----
+async function loadDailyReport() {
+  const today = new Date().toLocaleDateString('sv-SE'); // YYYY-MM-DD local
+  const { data: rep } = await db.from('daily_reports')
+    .select('contacts_count, new_prospects_count, commitments, submitted_at')
+    .eq('agent_id', me.id).eq('report_date', today).maybeSingle();
+  const st = $('dr-status'), form = $('dr-form');
+  if (rep) {
+    const hora = new Date(rep.submitted_at).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
+    st.innerHTML = `<span style="color:var(--green);font-weight:700">✓ Reporte de hoy enviado</span>
+      <span style="color:var(--mut)"> · ${hora} · ${rep.contacts_count} contactos · ${rep.new_prospects_count} prospectos nuevos</span>
+      <a href="#" id="dr-edit" style="color:var(--blue);font-size:12px;margin-left:8px">editar</a>`;
+    form.classList.add('hidden');
+    $('dr-contacts').value = rep.contacts_count; $('dr-new').value = rep.new_prospects_count;
+    $('dr-commit').value = rep.commitments || '';
+    document.getElementById('dr-edit').addEventListener('click', (e) => { e.preventDefault(); form.classList.remove('hidden'); });
+  } else {
+    st.innerHTML = `<span style="color:#fb923c;font-weight:700">⏳ Aún no envías tu reporte de hoy</span>`;
+    form.classList.remove('hidden');
+  }
 }
 function showLogin() { $('panel').classList.add('hidden'); $('login').classList.remove('hidden'); }
 
@@ -113,6 +136,23 @@ $('add-form').addEventListener('submit', async (e) => {
   btn.disabled = false;
   if (error) { msg.textContent = error.message; return; }
   e.target.reset(); $('add-form').classList.add('hidden'); loadPipeline();
+});
+
+$('dr-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const msg = $('dr-msg'), btn = $('dr-send');
+  btn.disabled = true; msg.textContent = '';
+  const today = new Date().toLocaleDateString('sv-SE');
+  const { error } = await db.from('daily_reports').upsert({
+    agent_id: me.id, report_date: today,
+    contacts_count: Number($('dr-contacts').value) || 0,
+    new_prospects_count: Number($('dr-new').value) || 0,
+    commitments: $('dr-commit').value.trim() || null,
+    submitted_at: new Date().toISOString(),
+  }, { onConflict: 'agent_id,report_date' });
+  btn.disabled = false;
+  if (error) { msg.textContent = error.message; return; }
+  loadDailyReport();
 });
 
 $('n-add').addEventListener('click', async () => {

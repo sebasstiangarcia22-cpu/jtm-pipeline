@@ -91,6 +91,21 @@
       </div>
     </header>
     <div class="wrap">
+      <!-- Daily report card -->
+      <div id="dr-card" style="border-radius:12px;border:1px solid var(--line);background:var(--card);padding:16px 18px;margin-bottom:22px">
+        <div id="dr-status" class="state" style="padding:0">Cargando…</div>
+        <form id="dr-form" class="hidden" style="margin-top:14px;display:grid;grid-template-columns:repeat(2,1fr);gap:13px">
+          <div><label style="display:block;font-size:11px;color:var(--mut);margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px">Contactos / llamadas hoy</label>
+            <input id="dr-contacts" type="number" min="0" value="0" style="width:100%;padding:9px 11px;background:#0e1116;border:1px solid var(--line);border-radius:8px;color:var(--txt);font-size:14px;outline:none" /></div>
+          <div><label style="display:block;font-size:11px;color:var(--mut);margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px">Prospectos nuevos hoy</label>
+            <input id="dr-new" type="number" min="0" value="0" style="width:100%;padding:9px 11px;background:#0e1116;border:1px solid var(--line);border-radius:8px;color:var(--txt);font-size:14px;outline:none" /></div>
+          <div style="grid-column:1/-1"><label style="display:block;font-size:11px;color:var(--mut);margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px">Compromisos para mañana</label>
+            <textarea id="dr-commit" rows="2" placeholder="Qué vas a cerrar o avanzar mañana…" style="width:100%;padding:9px 11px;background:#0e1116;border:1px solid var(--line);border-radius:8px;color:var(--txt);font-size:14px;outline:none;resize:vertical;font-family:inherit"></textarea></div>
+          <div style="grid-column:1/-1"><button class="btn-add" type="submit" id="dr-send">Enviar reporte de hoy</button>
+            <span class="msg err" id="dr-msg" style="margin-left:10px"></span></div>
+        </form>
+      </div>
+
       <div class="pipe-head">
         <h2>Mi Pipeline</h2>
         <button class="btn-add" id="add-toggle">+ Agregar prospecto</button>
