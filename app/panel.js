@@ -167,10 +167,10 @@ function renderDeals() {
         <td class="num ${real ? 'pos' : ''}">${real != null ? money(real) : '—'}</td>
         <td><span class="dot dot-${a.dot}" style="display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px;background:${a.dot === 'green' ? 'var(--green)' : a.dot === 'yellow' ? '#facc15' : a.dot === 'red' ? '#f85149' : '#6b7280'}"></span>${a.txt}</td>
         <td>${d.next_action || '—'}${d.next_action_date ? ` <span style="color:var(--mut);font-size:11px">· ${d.next_action_date}</span>` : ''}</td>
-      </tr>`;
+      </tr><tr class="notes-tr hidden" data-notes-for="${d.id}"><td colspan="8" style="background:#10151c"></td></tr>`;
     }).join('')}</tbody></table>`;
   document.querySelectorAll('#deals-table .deal-row').forEach((tr) =>
-    tr.addEventListener('click', () => { showTab('tab-team'); setTimeout(() => toggleTeamNotes(tr.dataset.id), 400); }));
+    tr.addEventListener('click', () => toggleTeamNotes(tr.dataset.id, '#deals-table')));
 }
 
 // Pipeline Potential KPI (sum of deal sizes — login-only, like the old $530K+)
@@ -260,9 +260,10 @@ async function loadTeam() {
     </div>`).join('') || '<div class="state">Sin actividad aún.</div>';
 }
 
-// Expand/collapse a prospect's evolution under its row
-async function toggleTeamNotes(id) {
-  const tr = document.querySelector(`tr[data-notes-for="${id}"]`);
+// Expand/collapse a prospect's evolution under its row (scoped per table,
+// since the same prospect can appear in Equipo and Negocios)
+async function toggleTeamNotes(id, containerSel = '#team-pipeline') {
+  const tr = document.querySelector(`${containerSel} tr[data-notes-for="${id}"]`);
   if (!tr) return;
   if (!tr.classList.contains('hidden')) { tr.classList.add('hidden'); return; }
   const cell = tr.querySelector('td[colspan]');
