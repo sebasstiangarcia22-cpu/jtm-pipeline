@@ -1,6 +1,8 @@
 // Dashboard logic: read production data from Supabase and render it.
+// Wrapped in an IIFE so it can coexist with panel.js on the same page.
+(() => {
 const cfg = window.JTM_CONFIG || {};
-const statusEl = document.getElementById('status');
+const statusEl = document.getElementById('status'); // absent on panel.html
 
 const money = (n) => {
   const v = Number(n) || 0;
@@ -18,7 +20,7 @@ function table(rows, cols) {
 
 async function load() {
   if (!cfg.SUPABASE_URL || cfg.SUPABASE_URL.includes('YOUR-PROJECT')) {
-    statusEl.textContent = 'config missing';
+    if(statusEl)statusEl.textContent = 'config missing';
     document.getElementById('bdm').innerHTML = '<div class="state">Set URL/key in config.js.</div>';
     return;
   }
@@ -73,8 +75,8 @@ async function load() {
     const arg = period ? { p_month: period } : {};
     const { data: bdm, error: e1 } = await db.rpc('public_bdm_ranking', arg);
     const { data: ib, error: e2 } = await db.rpc('public_ib_ranking', arg);
-    if (e1 || e2) { statusEl.textContent = 'error'; console.error(e1 || e2); return; }
-    statusEl.textContent = 'live';
+    if (e1 || e2) { if (statusEl) statusEl.textContent = "error"; console.error(e1 || e2); return; }
+    if(statusEl)statusEl.textContent = 'live';
 
     document.getElementById('bdm').innerHTML = table(bdm, [
       { label: '#', render: (r, i) => `<td>${i + 1}</td>` },
@@ -124,4 +126,5 @@ async function load() {
   document.getElementById('reg-search').addEventListener('input', (e) => renderReg(e.target.value));
 }
 
-load().catch((e) => { statusEl.textContent = 'error'; console.error(e); });
+load().catch((e) => { if(statusEl)statusEl.textContent = 'error'; console.error(e); });
+})();

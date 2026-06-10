@@ -91,10 +91,58 @@
       </div>
     </header>
     <div class="wrap">
-      <!-- Admin tabs (only gm/admin) -->
+      <!-- Admin tabs (gm/admin/viewer) -->
       <div id="admin-tabs" class="hidden" style="display:flex;gap:6px;margin-bottom:20px">
         <button class="period-btn active" id="tab-mine" type="button">Mi panel</button>
         <button class="period-btn" id="tab-team" type="button">Equipo</button>
+        <button class="period-btn" id="tab-dash" type="button">Dashboard</button>
+      </div>
+      <style>
+        /* Dashboard-tab styles (mirrors index.html) */
+        .pos { color:var(--green); } .neg { color:#f85149; } .num.gross { color:var(--blue); }
+        .badge.former { background:#2d2418; color:#d29922; }
+        .ftd-yes { color:var(--green); font-weight:700; }
+        .kpi-bar { display:flex; border:1px solid var(--line); border-radius:12px; background:var(--card); margin-bottom:22px; overflow:hidden; }
+        .kpi { flex:1; text-align:center; padding:16px 10px; border-right:1px solid var(--line); }
+        .kpi:last-child { border-right:none; }
+        .kpi-val { font-size:21px; font-weight:800; font-variant-numeric:tabular-nums; }
+        .kpi-val.pos { color:var(--green); } .kpi-val.neg { color:#f85149; }
+        .kpi-lbl { font-size:10px; color:var(--mut); text-transform:uppercase; letter-spacing:.5px; margin-top:4px; }
+        .month-grid { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:8px; }
+        .month-card { flex:1; min-width:120px; background:var(--card); border:1px solid var(--line);
+                      border-top:3px solid var(--line); border-radius:10px; padding:12px 14px; }
+        .month-card.current { border-top-color:#d29922; } .month-card.best { border-top-color:var(--green); }
+        .mc-label { font-size:10px; font-weight:700; color:var(--mut); text-transform:uppercase; letter-spacing:.5px; }
+        .mc-amount { font-size:18px; font-weight:800; margin:5px 0 3px; font-variant-numeric:tabular-nums; }
+        .mc-amount.pos { color:var(--green); } .mc-amount.neg { color:#f85149; }
+        .mc-meta { font-size:11px; color:var(--mut); }
+        .mc-gross { font-size:13px; font-weight:700; color:var(--blue); margin-top:6px; font-variant-numeric:tabular-nums; }
+        .period-bar { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px; }
+        .search { width:280px; padding:8px 12px; margin-bottom:12px; background:var(--card);
+                  border:1px solid var(--line); border-radius:8px; color:var(--txt); font-size:13px; outline:none; }
+        .search:focus { border-color:var(--blue); }
+        #register { max-height:520px; overflow:auto; border-radius:10px; border:1px solid var(--line);
+                    scrollbar-width:thin; scrollbar-color:#2a323d #0e1116; }
+        #register table { border:none; border-radius:0; margin:0; border-collapse:separate; border-spacing:0; overflow:visible; }
+        #register thead th { position:sticky; top:0; background:#10151c; z-index:2; box-shadow:inset 0 -1px 0 var(--line); }
+        #register::-webkit-scrollbar { width:11px; } #register::-webkit-scrollbar-track { background:#0e1116; }
+        #register::-webkit-scrollbar-thumb { background:#2a323d; border-radius:8px; border:2px solid #0e1116; }
+        .reg-note { font-size:12px; color:var(--mut); padding:10px 14px; }
+        .dash-h { font-size:14px; text-transform:uppercase; letter-spacing:.5px; color:var(--mut); }
+      </style>
+
+      <div id="view-dash" class="hidden">
+        <div class="kpi-bar"><div id="kpis" style="display:contents"></div><div id="kpi-extra" style="display:contents"></div></div>
+        <h2 class="dash-h">By Month</h2>
+        <div id="months" class="month-grid"><div class="state">Loading…</div></div>
+        <h2 class="dash-h">Rankings</h2>
+        <div class="period-bar" id="period-bar"></div>
+        <div id="bdm"><div class="state">Loading…</div></div>
+        <h2 class="dash-h" style="margin-top:26px">Top IBs</h2>
+        <div id="ib"><div class="state">Loading…</div></div>
+        <h2 class="dash-h" style="margin-top:26px">Deposit Register</h2>
+        <input class="search" id="reg-search" placeholder="Search client, BDM, source…" autocomplete="off" />
+        <div id="register"><div class="state">Loading…</div></div>
       </div>
       <style>
         .period-btn { padding:6px 16px; border:1px solid var(--line); background:var(--card); border-radius:20px; font-size:13px; color:var(--mut); cursor:pointer; }
@@ -188,5 +236,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js"></script>
   <script src="panel.js"></script>
+  <script src="app.js"></script><!-- fills the Dashboard tab (IIFE, no globals) -->
 </body>
 </html>

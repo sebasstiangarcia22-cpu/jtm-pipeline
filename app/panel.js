@@ -27,27 +27,35 @@ async function showPanel() {
   $('f-status').innerHTML = Object.keys(STATUSES).map((s) => `<option>${s}</option>`).join('');
   $('login').classList.add('hidden'); $('panel').classList.remove('hidden');
   const canViewAll = me && ['gm', 'admin', 'viewer'].includes(me.role);
-  if (canViewAll) $('admin-tabs').classList.remove('hidden');
+  if (canViewAll) { $('admin-tabs').classList.remove('hidden'); loadPipelinePotential(); }
   if (me && me.role === 'viewer') {
-    // Viewers (Nishil/management) are read-only: team view only, no own pipeline
+    // Viewers (Nishil/management) are read-only: Dashboard + Equipo, no own pipeline
     $('tab-mine').classList.add('hidden');
-    $('tab-team').click();
+    showTab('tab-dash');
     return;
   }
   await loadPipeline();          // fills rowsById (prospect names for the summary)
   loadDailyReport();
 }
 
-// ---- Admin: team view ----
-$('tab-mine').addEventListener('click', () => {
-  $('tab-mine').classList.add('active'); $('tab-team').classList.remove('active');
-  $('view-mine').classList.remove('hidden'); $('view-team').classList.add('hidden');
-});
-$('tab-team').addEventListener('click', () => {
-  $('tab-team').classList.add('active'); $('tab-mine').classList.remove('active');
-  $('view-team').classList.remove('hidden'); $('view-mine').classList.add('hidden');
-  loadTeam();
-});
+// ---- Tabs (Mi panel / Equipo / Dashboard) ----
+const TABS = { 'tab-mine': 'view-mine', 'tab-team': 'view-team', 'tab-dash': 'view-dash' };
+function showTab(tabId) {
+  Object.entries(TABS).forEach(([t, v]) => {
+    $(t).classList.toggle('active', t === tabId);
+    $(v).classList.toggle('hidden', t !== tabId);
+  });
+  if (tabId === 'tab-team') loadTeam();
+}
+Object.keys(TABS).forEach((t) => $(t).addEventListener('click', () => showTab(t)));
+
+// Pipeline Potential KPI (sum of deal sizes — login-only, like the old $530K+)
+async function loadPipelinePotential() {
+  const { data } = await db.from('pipeline_entries').select('deal_size');
+  const total = (data || []).reduce((s, r) => s + (Number(r.deal_size) || 0), 0);
+  $('kpi-extra').innerHTML = `<div class="kpi"><div class="kpi-val" style="color:var(--blue)">${money(total)}</div>
+    <div class="kpi-lbl">Pipeline Potential</div></div>`;
+}
 
 let teamOffset = 0; // 0 = today, -1 = yesterday, ...
 const dayStr = (off) => { const d = new Date(); d.setDate(d.getDate() + off); return d.toLocaleDateString('sv-SE'); };
