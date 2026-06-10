@@ -134,7 +134,12 @@
 
       <div id="view-deals" class="hidden">
         <div id="deals-kpis" class="kpi-bar"></div>
-        <h2 class="dash-h">Negocios del equipo <span style="text-transform:none;letter-spacing:0;font-weight:400">· un funnel consolidado, ordenado por potencial</span></h2>
+        <div id="deals-subtabs" style="display:flex;gap:6px;margin-bottom:14px">
+          <button class="period-btn active" id="dsub-process" type="button">En proceso</button>
+          <button class="period-btn" id="dsub-funded" type="button">Activos</button>
+          <button class="period-btn" id="dsub-lost" type="button">Perdidos</button>
+        </div>
+        <div id="deals-hint" class="state" style="padding:0 0 10px"></div>
         <div id="deals-table"><div class="state">Cargando…</div></div>
       </div>
 

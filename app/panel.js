@@ -50,7 +50,32 @@ function showTab(tabId) {
 }
 Object.keys(TABS).forEach((t) => $(t).addEventListener('click', () => showTab(t)));
 
-// ---- Negocios: one consolidated deals funnel ----
+// ---- Negocios: one consolidated deals funnel, in 3 sub-tabs ----
+const LOST_STATUSES = ['Lost', 'Inactive', 'Declined'];
+const FUNDED_STATUSES = ['Deposited', 'Active (funded)'];
+// Proximity to FTD: lower rank = closer to closing
+const STAGE_RANK = {
+  'Closing': 0, 'HOT': 1,
+  'Onboarding': 2, 'Meeting scheduled': 3, 'Call scheduled': 4,
+  'Negotiating': 5, 'Proposal pending': 6,
+  'Under evaluation': 7, 'Awaiting response': 8, 'Re-engaging': 9,
+};
+let dealsCache = null; // { deals, realBy, lastNote }
+let dealsSub = 'process';
+
+const DSUBS = { 'dsub-process': 'process', 'dsub-funded': 'funded', 'dsub-lost': 'lost' };
+Object.keys(DSUBS).forEach((id) => $(id).addEventListener('click', () => {
+  dealsSub = DSUBS[id];
+  Object.keys(DSUBS).forEach((b) => $(b).classList.toggle('active', b === id));
+  renderDeals();
+}));
+
+function dealCategory(d) {
+  if (LOST_STATUSES.includes(d.status)) return 'lost';
+  if (FUNDED_STATUSES.includes(d.status) || (d.status || '').startsWith('Funded')) return 'funded';
+  return 'process';
+}
+
 async function loadDeals() {
   const [{ data: deals }, { data: notes }] = await Promise.all([
     db.from('pipeline_entries')
@@ -74,17 +99,25 @@ async function loadDeals() {
   // Last activity per deal
   const lastNote = {};
   (notes || []).forEach((n) => { if (!lastNote[n.entity_id]) lastNote[n.entity_id] = n.created_at; });
+
+  dealsCache = { deals, realBy, lastNote };
+  renderDeals();
+}
+
+function renderDeals() {
+  if (!dealsCache) return;
+  const { deals, realBy, lastNote } = dealsCache;
   const aging = (id) => {
     if (!lastNote[id]) return { txt: 'sin actividad', dot: 'gray' };
     const days = Math.floor((Date.now() - new Date(lastNote[id])) / 86400000);
     return { txt: days === 0 ? 'hoy' : days === 1 ? 'ayer' : `hace ${days}d`, dot: days < 3 ? 'green' : days <= 7 ? 'yellow' : 'red' };
   };
 
-  // Summary strip
+  // Global summary strip (whole funnel)
   const totPipe = deals.reduce((s, d) => s + (Number(d.deal_size) || 0), 0);
   const totSig = deals.reduce((s, d) => s + (Number(d.deposit_signal_amount) || 0), 0);
   const totReal = Object.values(realBy).reduce((s, v) => s + v, 0);
-  const activos = deals.filter((d) => !['Lost', 'Inactive', 'Declined'].includes(d.status)).length;
+  const activos = deals.filter((d) => dealCategory(d) !== 'lost').length;
   $('deals-kpis').innerHTML = [
     ['Pipeline Potential', money(totPipe), 'style="color:var(--blue)"'],
     ['En señales', money(totSig), 'style="color:#facc15"'],
@@ -92,10 +125,37 @@ async function loadDeals() {
     ['Negocios activos', activos, ''],
   ].map(([lbl, val, attr]) => `<div class="kpi"><div class="kpi-val" ${attr}>${val}</div><div class="kpi-lbl">${lbl}</div></div>`).join('');
 
-  // Table
+  // Sub-tab counts
+  const counts = { process: 0, funded: 0, lost: 0 };
+  deals.forEach((d) => counts[dealCategory(d)]++);
+  $('dsub-process').textContent = `En proceso (${counts.process})`;
+  $('dsub-funded').textContent = `Activos (${counts.funded})`;
+  $('dsub-lost').textContent = `Perdidos (${counts.lost})`;
+
+  // Filter current sub-tab + its priority sorting
+  const subset = deals.filter((d) => dealCategory(d) === dealsSub);
+  const sig = (d) => Number(d.deposit_signal_amount) || 0;
+  const realOf = (d) => (d.client_login && realBy[d.client_login]) || 0;
+  if (dealsSub === 'process') {
+    // Closest to FTD first: active signal > stage rank > size
+    subset.sort((a, b) => ((sig(b) > 0) - (sig(a) > 0))
+      || (STAGE_RANK[a.status] ?? 99) - (STAGE_RANK[b.status] ?? 99)
+      || (Number(b.deal_size) || 0) - (Number(a.deal_size) || 0));
+    $('deals-hint').textContent = 'Prioridad: señal de depósito activa y cercanía al FTD.';
+  } else if (dealsSub === 'funded') {
+    // Active deposit signals first (re-deposits about to land)
+    subset.sort((a, b) => ((sig(b) > 0) - (sig(a) > 0)) || sig(b) - sig(a) || realOf(b) - realOf(a));
+    $('deals-hint').textContent = 'Prioridad: señales de depósito activas (re-depósitos por caer).';
+  } else {
+    subset.sort((a, b) => (Number(b.deal_size) || 0) - (Number(a.deal_size) || 0));
+    $('deals-hint').textContent = 'Negocios perdidos o inactivos — fuera del funnel activo.';
+  }
+
+  if (!subset.length) { $('deals-table').innerHTML = '<div class="state">Nada en esta categoría.</div>'; return; }
+
   $('deals-table').innerHTML = `<table><thead><tr>
     <th>Negocio</th><th>BDM</th><th>Status</th><th class="num">Potencial</th><th class="num">Señal</th><th class="num">Real (FXBO)</th><th>Último avance</th><th>Próximo paso</th>
-    </tr></thead><tbody>${deals.map((d) => {
+    </tr></thead><tbody>${subset.map((d) => {
       const a = aging(d.id);
       const real = d.client_login ? (realBy[d.client_login] || 0) : null;
       return `<tr data-id="${d.id}" class="deal-row">
