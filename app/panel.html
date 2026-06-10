@@ -134,10 +134,14 @@
 
       <div id="view-deals" class="hidden">
         <div id="deals-kpis" class="kpi-bar"></div>
-        <div id="deals-subtabs" style="display:flex;gap:6px;margin-bottom:14px">
+        <div id="deals-subtabs" style="display:flex;gap:6px;margin-bottom:14px;align-items:center">
           <button class="period-btn active" id="dsub-process" type="button">En proceso</button>
           <button class="period-btn" id="dsub-funded" type="button">Activos</button>
           <button class="period-btn" id="dsub-lost" type="button">Perdidos</button>
+          <span style="flex:1"></span>
+          <span style="font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:.4px">Ver:</span>
+          <button class="period-btn active" id="dview-flat" type="button">Consolidado</button>
+          <button class="period-btn" id="dview-agent" type="button">Por agente</button>
         </div>
         <div id="deals-hint" class="state" style="padding:0 0 10px"></div>
         <div id="deals-table"><div class="state">Cargando…</div></div>

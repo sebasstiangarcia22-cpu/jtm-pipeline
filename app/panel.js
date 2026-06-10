@@ -62,6 +62,18 @@ const STAGE_RANK = {
 };
 let dealsCache = null; // { deals, realBy, lastNote }
 let dealsSub = 'process';
+let dealsMode = 'flat'; // 'flat' = consolidado · 'agent' = agrupado por miembro
+
+$('dview-flat').addEventListener('click', () => {
+  dealsMode = 'flat';
+  $('dview-flat').classList.add('active'); $('dview-agent').classList.remove('active');
+  renderDeals();
+});
+$('dview-agent').addEventListener('click', () => {
+  dealsMode = 'agent';
+  $('dview-agent').classList.add('active'); $('dview-flat').classList.remove('active');
+  renderDeals();
+});
 
 const DSUBS = { 'dsub-process': 'process', 'dsub-funded': 'funded', 'dsub-lost': 'lost' };
 Object.keys(DSUBS).forEach((id) => $(id).addEventListener('click', () => {
@@ -153,22 +165,49 @@ function renderDeals() {
 
   if (!subset.length) { $('deals-table').innerHTML = '<div class="state">Nada en esta categoría.</div>'; return; }
 
-  $('deals-table').innerHTML = `<table><thead><tr>
+  const dealRow = (d) => {
+    const a = aging(d.id);
+    const real = d.client_login ? (realBy[d.client_login] || 0) : null;
+    return `<tr data-id="${d.id}" class="deal-row">
+      <td>${d.prospect_name}${d.country ? ` <span style="color:var(--mut);font-size:11px">· ${d.country}</span>` : ''}</td>
+      <td>${d.owner?.full_name || '—'}</td>
+      <td><span class="pill b-${d.badge_color || 'gray'}">${d.status || '—'}</span></td>
+      <td class="num" style="color:var(--blue)">${d.deal_size ? money(d.deal_size) : '—'}</td>
+      <td class="num" style="color:#facc15">${d.deposit_signal_amount ? money(d.deposit_signal_amount) + (d.deposit_signal_date ? ` <span style="color:var(--mut);font-size:11px">→ ${d.deposit_signal_date}</span>` : '') : '—'}</td>
+      <td class="num ${real ? 'pos' : ''}">${real != null ? money(real) : '—'}</td>
+      <td><span style="display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px;background:${a.dot === 'green' ? 'var(--green)' : a.dot === 'yellow' ? '#facc15' : a.dot === 'red' ? '#f85149' : '#6b7280'}"></span>${a.txt}</td>
+      <td>${d.next_action || '—'}${d.next_action_date ? ` <span style="color:var(--mut);font-size:11px">· ${d.next_action_date}</span>` : ''}</td>
+    </tr><tr class="notes-tr hidden" data-notes-for="${d.id}"><td colspan="8" style="background:#10151c"></td></tr>`;
+  };
+  const THEAD = `<thead><tr>
     <th>Negocio</th><th>BDM</th><th>Status</th><th class="num">Potencial</th><th class="num">Señal</th><th class="num">Real (FXBO)</th><th>Último avance</th><th>Próximo paso</th>
-    </tr></thead><tbody>${subset.map((d) => {
-      const a = aging(d.id);
-      const real = d.client_login ? (realBy[d.client_login] || 0) : null;
-      return `<tr data-id="${d.id}" class="deal-row">
-        <td>${d.prospect_name}${d.country ? ` <span style="color:var(--mut);font-size:11px">· ${d.country}</span>` : ''}</td>
-        <td>${d.owner?.full_name || '—'}</td>
-        <td><span class="pill b-${d.badge_color || 'gray'}">${d.status || '—'}</span></td>
-        <td class="num" style="color:var(--blue)">${d.deal_size ? money(d.deal_size) : '—'}</td>
-        <td class="num" style="color:#facc15">${d.deposit_signal_amount ? money(d.deposit_signal_amount) + (d.deposit_signal_date ? ` <span style="color:var(--mut);font-size:11px">→ ${d.deposit_signal_date}</span>` : '') : '—'}</td>
-        <td class="num ${real ? 'pos' : ''}">${real != null ? money(real) : '—'}</td>
-        <td><span class="dot dot-${a.dot}" style="display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px;background:${a.dot === 'green' ? 'var(--green)' : a.dot === 'yellow' ? '#facc15' : a.dot === 'red' ? '#f85149' : '#6b7280'}"></span>${a.txt}</td>
-        <td>${d.next_action || '—'}${d.next_action_date ? ` <span style="color:var(--mut);font-size:11px">· ${d.next_action_date}</span>` : ''}</td>
-      </tr><tr class="notes-tr hidden" data-notes-for="${d.id}"><td colspan="8" style="background:#10151c"></td></tr>`;
-    }).join('')}</tbody></table>`;
+    </tr></thead>`;
+
+  if (dealsMode === 'agent') {
+    // Group by team member (subtotals per agent), ordered by pipeline value
+    const groups = {};
+    subset.forEach((d) => { const k = d.owner?.full_name || '—'; (groups[k] ||= []).push(d); });
+    $('deals-table').innerHTML = Object.entries(groups)
+      .map(([agent, list]) => ({
+        agent, list,
+        pot: list.reduce((s, d) => s + (Number(d.deal_size) || 0), 0),
+        sigT: list.reduce((s, d) => s + (Number(d.deposit_signal_amount) || 0), 0),
+        real: list.reduce((s, d) => s + ((d.client_login && realBy[d.client_login]) || 0), 0),
+      }))
+      .sort((a, b) => b.pot - a.pot)
+      .map((g) => `<div style="margin-bottom:20px">
+        <div style="display:flex;align-items:center;gap:12px;padding:10px 2px;flex-wrap:wrap">
+          <strong style="font-size:14px">${g.agent}</strong>
+          <span class="badge">${g.list.length} negocio${g.list.length === 1 ? '' : 's'}</span>
+          <span style="font-size:12px;color:var(--blue)">Potencial ${money(g.pot)}</span>
+          <span style="font-size:12px;color:#facc15">Señales ${money(g.sigT)}</span>
+          <span style="font-size:12px;color:var(--green)">Real ${money(g.real)}</span>
+        </div>
+        <table>${THEAD}<tbody>${g.list.map(dealRow).join('')}</tbody></table>
+      </div>`).join('');
+  } else {
+    $('deals-table').innerHTML = `<table>${THEAD}<tbody>${subset.map(dealRow).join('')}</tbody></table>`;
+  }
   document.querySelectorAll('#deals-table .deal-row').forEach((tr) =>
     tr.addEventListener('click', () => toggleTeamNotes(tr.dataset.id, '#deals-table')));
 }
