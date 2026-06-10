@@ -95,6 +95,7 @@
       <div id="admin-tabs" class="hidden" style="display:flex;gap:6px;margin-bottom:20px">
         <button class="period-btn active" id="tab-mine" type="button">Mi panel</button>
         <button class="period-btn" id="tab-team" type="button">Equipo</button>
+        <button class="period-btn" id="tab-deals" type="button">Negocios</button>
         <button class="period-btn" id="tab-dash" type="button">Dashboard</button>
       </div>
       <style>
@@ -130,6 +131,12 @@
         .reg-note { font-size:12px; color:var(--mut); padding:10px 14px; }
         .dash-h { font-size:14px; text-transform:uppercase; letter-spacing:.5px; color:var(--mut); }
       </style>
+
+      <div id="view-deals" class="hidden">
+        <div id="deals-kpis" class="kpi-bar"></div>
+        <h2 class="dash-h">Negocios del equipo <span style="text-transform:none;letter-spacing:0;font-weight:400">· un funnel consolidado, ordenado por potencial</span></h2>
+        <div id="deals-table"><div class="state">Cargando…</div></div>
+      </div>
 
       <div id="view-dash" class="hidden">
         <div class="kpi-bar"><div id="kpis" style="display:contents"></div><div id="kpi-extra" style="display:contents"></div></div>

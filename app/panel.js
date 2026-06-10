@@ -38,16 +38,80 @@ async function showPanel() {
   loadDailyReport();
 }
 
-// ---- Tabs (Mi panel / Equipo / Dashboard) ----
-const TABS = { 'tab-mine': 'view-mine', 'tab-team': 'view-team', 'tab-dash': 'view-dash' };
+// ---- Tabs (Mi panel / Equipo / Negocios / Dashboard) ----
+const TABS = { 'tab-mine': 'view-mine', 'tab-team': 'view-team', 'tab-deals': 'view-deals', 'tab-dash': 'view-dash' };
 function showTab(tabId) {
   Object.entries(TABS).forEach(([t, v]) => {
     $(t).classList.toggle('active', t === tabId);
     $(v).classList.toggle('hidden', t !== tabId);
   });
   if (tabId === 'tab-team') loadTeam();
+  if (tabId === 'tab-deals') loadDeals();
 }
 Object.keys(TABS).forEach((t) => $(t).addEventListener('click', () => showTab(t)));
+
+// ---- Negocios: one consolidated deals funnel ----
+async function loadDeals() {
+  const [{ data: deals }, { data: notes }] = await Promise.all([
+    db.from('pipeline_entries')
+      .select('id, prospect_name, country, status, badge_color, deal_size, client_login, deposit_signal_amount, deposit_signal_date, next_action, next_action_date, owner:profiles!pipeline_entries_owner_id_fkey(full_name)')
+      .order('deal_size', { ascending: false, nullsFirst: false }),
+    db.from('notes').select('entity_id, created_at').eq('entity_type', 'pipeline')
+      .order('created_at', { ascending: false }),
+  ]);
+  if (!deals || !deals.length) { $('deals-kpis').innerHTML = ''; $('deals-table').innerHTML = '<div class="state">Sin negocios aún.</div>'; return; }
+  deals.forEach((r) => { rowsById[r.id] = r; });
+
+  // Real deposited (FXBO) for linked deals
+  const logins = deals.map((d) => d.client_login).filter(Boolean);
+  const realBy = {};
+  if (logins.length) {
+    const { data: tx } = await db.from('transactions')
+      .select('client_login, amount, type').in('client_login', logins).eq('type', 'deposit');
+    (tx || []).forEach((t) => { realBy[t.client_login] = (realBy[t.client_login] || 0) + Number(t.amount); });
+  }
+
+  // Last activity per deal
+  const lastNote = {};
+  (notes || []).forEach((n) => { if (!lastNote[n.entity_id]) lastNote[n.entity_id] = n.created_at; });
+  const aging = (id) => {
+    if (!lastNote[id]) return { txt: 'sin actividad', dot: 'gray' };
+    const days = Math.floor((Date.now() - new Date(lastNote[id])) / 86400000);
+    return { txt: days === 0 ? 'hoy' : days === 1 ? 'ayer' : `hace ${days}d`, dot: days < 3 ? 'green' : days <= 7 ? 'yellow' : 'red' };
+  };
+
+  // Summary strip
+  const totPipe = deals.reduce((s, d) => s + (Number(d.deal_size) || 0), 0);
+  const totSig = deals.reduce((s, d) => s + (Number(d.deposit_signal_amount) || 0), 0);
+  const totReal = Object.values(realBy).reduce((s, v) => s + v, 0);
+  const activos = deals.filter((d) => !['Lost', 'Inactive', 'Declined'].includes(d.status)).length;
+  $('deals-kpis').innerHTML = [
+    ['Pipeline Potential', money(totPipe), 'style="color:var(--blue)"'],
+    ['En señales', money(totSig), 'style="color:#facc15"'],
+    ['Real depositado (FXBO)', money(totReal), 'class="kpi-val pos"'],
+    ['Negocios activos', activos, ''],
+  ].map(([lbl, val, attr]) => `<div class="kpi"><div class="kpi-val" ${attr}>${val}</div><div class="kpi-lbl">${lbl}</div></div>`).join('');
+
+  // Table
+  $('deals-table').innerHTML = `<table><thead><tr>
+    <th>Negocio</th><th>BDM</th><th>Status</th><th class="num">Potencial</th><th class="num">Señal</th><th class="num">Real (FXBO)</th><th>Último avance</th><th>Próximo paso</th>
+    </tr></thead><tbody>${deals.map((d) => {
+      const a = aging(d.id);
+      const real = d.client_login ? (realBy[d.client_login] || 0) : null;
+      return `<tr data-id="${d.id}" class="deal-row">
+        <td>${d.prospect_name}${d.country ? ` <span style="color:var(--mut);font-size:11px">· ${d.country}</span>` : ''}</td>
+        <td>${d.owner?.full_name || '—'}</td>
+        <td><span class="pill b-${d.badge_color || 'gray'}">${d.status || '—'}</span></td>
+        <td class="num" style="color:var(--blue)">${d.deal_size ? money(d.deal_size) : '—'}</td>
+        <td class="num" style="color:#facc15">${d.deposit_signal_amount ? money(d.deposit_signal_amount) + (d.deposit_signal_date ? ` <span style="color:var(--mut);font-size:11px">→ ${d.deposit_signal_date}</span>` : '') : '—'}</td>
+        <td class="num ${real ? 'pos' : ''}">${real != null ? money(real) : '—'}</td>
+        <td><span class="dot dot-${a.dot}" style="display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px;background:${a.dot === 'green' ? 'var(--green)' : a.dot === 'yellow' ? '#facc15' : a.dot === 'red' ? '#f85149' : '#6b7280'}"></span>${a.txt}</td>
+        <td>${d.next_action || '—'}${d.next_action_date ? ` <span style="color:var(--mut);font-size:11px">· ${d.next_action_date}</span>` : ''}</td>
+      </tr>`;
+    }).join('')}</tbody></table>`;
+  document.querySelectorAll('#deals-table .deal-row').forEach((tr) =>
+    tr.addEventListener('click', () => { showTab('tab-team'); setTimeout(() => toggleTeamNotes(tr.dataset.id), 400); }));
+}
 
 // Pipeline Potential KPI (sum of deal sizes — login-only, like the old $530K+)
 async function loadPipelinePotential() {
