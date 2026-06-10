@@ -26,29 +26,55 @@ async function showPanel() {
   $('who-role').textContent = profile ? profile.role.toUpperCase() : '—';
   $('f-status').innerHTML = Object.keys(STATUSES).map((s) => `<option>${s}</option>`).join('');
   $('login').classList.add('hidden'); $('panel').classList.remove('hidden');
-  loadPipeline();
+  await loadPipeline();          // fills rowsById (prospect names for the summary)
   loadDailyReport();
 }
 
 // ---- Daily report ----
+// Compile today's activity: all notes (incl. deposit signals) the agent wrote
+// today, grouped with each prospect's name, plus prospects created today.
+async function buildTodaySummary() {
+  const start = new Date(); start.setHours(0, 0, 0, 0);
+  const [{ data: notes }, { data: newPros }] = await Promise.all([
+    db.from('notes')
+      .select('text_original, created_at, entity_id')
+      .eq('author_id', me.id).gte('created_at', start.toISOString())
+      .order('created_at', { ascending: true }),
+    db.from('pipeline_entries')
+      .select('prospect_name').gte('created_at', start.toISOString()),
+  ]);
+  const lines = [];
+  if (newPros?.length) lines.push(`Prospectos nuevos hoy (${newPros.length}): ${newPros.map((p) => p.prospect_name).join(', ')}`);
+  (notes || []).forEach((n) => {
+    const name = rowsById[n.entity_id]?.prospect_name || 'Prospecto';
+    lines.push(`• [${name}] ${n.text_original}`);
+  });
+  return lines.join('\n');
+}
+
 async function loadDailyReport() {
   const today = new Date().toLocaleDateString('sv-SE'); // YYYY-MM-DD local
   const { data: rep } = await db.from('daily_reports')
-    .select('contacts_count, new_prospects_count, commitments, submitted_at')
+    .select('activity_summary, commitments, submitted_at')
     .eq('agent_id', me.id).eq('report_date', today).maybeSingle();
   const st = $('dr-status'), form = $('dr-form');
   if (rep) {
     const hora = new Date(rep.submitted_at).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
     st.innerHTML = `<span style="color:var(--green);font-weight:700">✓ Reporte de hoy enviado</span>
-      <span style="color:var(--mut)"> · ${hora} · ${rep.contacts_count} contactos · ${rep.new_prospects_count} prospectos nuevos</span>
-      <a href="#" id="dr-edit" style="color:var(--blue);font-size:12px;margin-left:8px">editar</a>`;
+      <span style="color:var(--mut)"> · ${hora}</span>
+      <a href="#" id="dr-edit" style="color:var(--blue);font-size:12px;margin-left:8px">editar</a>
+      <div style="margin-top:10px;font-size:13px;color:var(--mut);white-space:pre-wrap;line-height:1.6">${rep.activity_summary || ''}${rep.commitments ? '\n— ' + rep.commitments : ''}</div>`;
     form.classList.add('hidden');
-    $('dr-contacts').value = rep.contacts_count; $('dr-new').value = rep.new_prospects_count;
+    $('dr-summary').value = rep.activity_summary || '';
     $('dr-commit').value = rep.commitments || '';
-    document.getElementById('dr-edit').addEventListener('click', (e) => { e.preventDefault(); form.classList.remove('hidden'); });
+    document.getElementById('dr-edit').addEventListener('click', async (e) => {
+      e.preventDefault(); form.classList.remove('hidden');
+    });
   } else {
     st.innerHTML = `<span style="color:#fb923c;font-weight:700">⏳ Aún no envías tu reporte de hoy</span>`;
     form.classList.remove('hidden');
+    $('dr-summary').value = await buildTodaySummary();
+    if (!$('dr-summary').value) $('dr-summary').placeholder = 'Sin actividad registrada hoy. Agrega notas a tus prospectos y aparecerán aquí, o escribe tu resumen.';
   }
 }
 function showLogin() { $('panel').classList.add('hidden'); $('login').classList.remove('hidden'); }
@@ -145,8 +171,7 @@ $('dr-form').addEventListener('submit', async (e) => {
   const today = new Date().toLocaleDateString('sv-SE');
   const { error } = await db.from('daily_reports').upsert({
     agent_id: me.id, report_date: today,
-    contacts_count: Number($('dr-contacts').value) || 0,
-    new_prospects_count: Number($('dr-new').value) || 0,
+    activity_summary: $('dr-summary').value.trim() || null,
     commitments: $('dr-commit').value.trim() || null,
     submitted_at: new Date().toISOString(),
   }, { onConflict: 'agent_id,report_date' });
