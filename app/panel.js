@@ -63,8 +63,25 @@ function openEdit(id) {
   $('e-sig-date').value = r.deposit_signal_date ?? '';
   $('e-sig-type').value = r.deposit_signal_type ?? '';
   $('edit-msg').textContent = '';
+  $('n-text').value = ''; $('n-msg').textContent = '';
   $('edit-modal').classList.remove('hidden');
   $('edit-modal').dataset.id = id;
+  loadNotes(id);
+}
+
+async function loadNotes(id) {
+  const el = $('n-list');
+  el.innerHTML = '<div class="state">Cargando notas…</div>';
+  const { data: notes, error } = await db.from('notes')
+    .select('note_date, text_original, created_at')
+    .eq('entity_type', 'pipeline').eq('entity_id', id)
+    .order('created_at', { ascending: false });
+  if (error) { el.innerHTML = `<div class="state">Error: ${error.message}</div>`; return; }
+  if (!notes.length) { el.innerHTML = '<div class="state">Sin notas aún. Agrega la primera.</div>'; return; }
+  el.innerHTML = notes.map((n) =>
+    `<div style="padding:9px 2px;border-bottom:1px solid var(--line);font-size:13px;line-height:1.5">
+      <strong style="color:var(--blue)">${n.note_date}</strong> — ${n.text_original}
+    </div>`).join('');
 }
 
 $('login-form').addEventListener('submit', async (e) => {
@@ -96,6 +113,20 @@ $('add-form').addEventListener('submit', async (e) => {
   btn.disabled = false;
   if (error) { msg.textContent = error.message; return; }
   e.target.reset(); $('add-form').classList.add('hidden'); loadPipeline();
+});
+
+$('n-add').addEventListener('click', async () => {
+  const id = $('edit-modal').dataset.id, text = $('n-text').value.trim();
+  const msg = $('n-msg'), btn = $('n-add');
+  if (!text) return;
+  btn.disabled = true; msg.textContent = '';
+  const { error } = await db.from('notes').insert({
+    entity_type: 'pipeline', entity_id: id, author_id: me.id, text_original: text,
+  });
+  btn.disabled = false;
+  if (error) { msg.textContent = error.message; return; }
+  $('n-text').value = '';
+  loadNotes(id);
 });
 
 $('edit-close').addEventListener('click', () => $('edit-modal').classList.add('hidden'));

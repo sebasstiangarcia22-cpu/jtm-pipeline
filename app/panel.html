@@ -128,6 +128,14 @@
           </select></div>
           <div class="full"><button class="btn-add" id="edit-save">Guardar cambios</button>
             <span class="msg err" id="edit-msg" style="margin-left:10px"></span></div>
+          <div class="full sig-head">Historial / Notas</div>
+          <div class="full">
+            <textarea id="n-text" rows="2" placeholder="Escribe el avance de hoy…"
+              style="width:100%;padding:9px 11px;background:#0e1116;border:1px solid var(--line);border-radius:8px;color:var(--txt);font-size:14px;outline:none;resize:vertical;font-family:inherit"></textarea>
+            <button class="btn-add" id="n-add" style="margin-top:8px">Agregar nota</button>
+            <span class="msg err" id="n-msg" style="margin-left:10px"></span>
+          </div>
+          <div class="full" id="n-list" style="max-height:220px;overflow:auto"></div>
         </div>
       </div>
     </div>
