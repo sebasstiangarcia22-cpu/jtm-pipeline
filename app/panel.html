@@ -91,6 +91,24 @@
       </div>
     </header>
     <div class="wrap">
+      <!-- Admin tabs (only gm/admin) -->
+      <div id="admin-tabs" class="hidden" style="display:flex;gap:6px;margin-bottom:20px">
+        <button class="period-btn active" id="tab-mine" type="button">Mi panel</button>
+        <button class="period-btn" id="tab-team" type="button">Equipo</button>
+      </div>
+      <style>
+        .period-btn { padding:6px 16px; border:1px solid var(--line); background:var(--card); border-radius:20px; font-size:13px; color:var(--mut); cursor:pointer; }
+        .period-btn.active { background:var(--blue); color:#fff; border-color:var(--blue); }
+      </style>
+
+      <div id="view-team" class="hidden">
+        <h2 style="font-size:14px;text-transform:uppercase;letter-spacing:.5px;color:var(--mut)">Reportes de hoy</h2>
+        <div id="team-reports" class="state">Cargando…</div>
+        <h2 style="font-size:14px;text-transform:uppercase;letter-spacing:.5px;color:var(--mut);margin-top:26px">Pipeline del equipo</h2>
+        <div id="team-pipeline" class="state">Cargando…</div>
+      </div>
+
+      <div id="view-mine">
       <!-- Daily report card -->
       <div id="dr-card" style="border-radius:12px;border:1px solid var(--line);background:var(--card);padding:16px 18px;margin-bottom:22px">
         <div id="dr-status" class="state" style="padding:0">Cargando…</div>
@@ -122,6 +140,7 @@
           <span class="msg err" id="add-msg" style="margin-left:10px"></span></div>
       </form>
       <div id="pipeline"><div class="state">Cargando…</div></div>
+      </div><!-- /view-mine -->
     </div>
 
     <!-- Edit modal -->

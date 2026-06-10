@@ -26,8 +26,60 @@ async function showPanel() {
   $('who-role').textContent = profile ? profile.role.toUpperCase() : '—';
   $('f-status').innerHTML = Object.keys(STATUSES).map((s) => `<option>${s}</option>`).join('');
   $('login').classList.add('hidden'); $('panel').classList.remove('hidden');
+  if (me && (me.role === 'gm' || me.role === 'admin')) $('admin-tabs').classList.remove('hidden');
   await loadPipeline();          // fills rowsById (prospect names for the summary)
   loadDailyReport();
+}
+
+// ---- Admin: team view ----
+$('tab-mine').addEventListener('click', () => {
+  $('tab-mine').classList.add('active'); $('tab-team').classList.remove('active');
+  $('view-mine').classList.remove('hidden'); $('view-team').classList.add('hidden');
+});
+$('tab-team').addEventListener('click', () => {
+  $('tab-team').classList.add('active'); $('tab-mine').classList.remove('active');
+  $('view-team').classList.remove('hidden'); $('view-mine').classList.add('hidden');
+  loadTeam();
+});
+
+async function loadTeam() {
+  const today = new Date().toLocaleDateString('sv-SE');
+  // Today's reports + who's missing
+  const [{ data: agents }, { data: reps }] = await Promise.all([
+    db.from('profiles').select('id, full_name, role').eq('active', true)
+      .in('role', ['bdm', 'asm', 'team_leader', 'gm']),
+    db.from('daily_reports').select('agent_id, activity_summary, commitments, submitted_at')
+      .eq('report_date', today),
+  ]);
+  const repBy = {}; (reps || []).forEach((r) => { repBy[r.agent_id] = r; });
+  $('team-reports').innerHTML = (agents || []).map((a) => {
+    const r = repBy[a.id];
+    if (!r) return `<div style="border:1px solid var(--line);border-radius:10px;background:var(--card);padding:12px 14px;margin:8px 0">
+      <strong>${a.full_name}</strong> <span class="badge">${a.role.toUpperCase()}</span>
+      <span style="color:#fb923c;font-weight:700;margin-left:8px">⚠️ Sin reporte</span></div>`;
+    const hora = new Date(r.submitted_at).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
+    return `<div style="border:1px solid var(--line);border-radius:10px;background:var(--card);padding:12px 14px;margin:8px 0">
+      <strong>${a.full_name}</strong> <span class="badge">${a.role.toUpperCase()}</span>
+      <span style="color:var(--green);font-weight:700;margin-left:8px">✓ ${hora}</span>
+      <div style="white-space:pre-wrap;margin-top:8px;font-size:13px;color:var(--mut);line-height:1.6">${r.activity_summary || ''}${r.commitments ? '\n— ' + r.commitments : ''}</div></div>`;
+  }).join('') || '<div class="state">Sin agentes.</div>';
+
+  // Team pipeline (RLS gives admin everything)
+  const { data: rows } = await db.from('pipeline_entries')
+    .select('id, prospect_name, country, status, badge_color, deal_size, next_action, next_action_date, deposit_signal_amount, deposit_signal_date, deposit_signal_type, source, owner:profiles!pipeline_entries_owner_id_fkey(full_name)')
+    .order('updated_at', { ascending: false });
+  if (!rows || !rows.length) { $('team-pipeline').innerHTML = '<div class="state">Sin prospectos aún.</div>'; return; }
+  rows.forEach((r) => { rowsById[r.id] = r; });
+  $('team-pipeline').innerHTML = `<table><thead><tr>
+    <th>Prospecto</th><th>Agente</th><th>Status</th><th class="num">Deal size</th><th>Próximo paso</th><th>Fecha</th>
+    </tr></thead><tbody>${rows.map((r) => `<tr data-id="${r.id}">
+      <td>${r.prospect_name}</td><td>${r.owner?.full_name || '—'}</td>
+      <td><span class="pill b-${r.badge_color || 'gray'}">${r.status || '—'}</span></td>
+      <td class="num">${r.deal_size ? money(r.deal_size) : '—'}</td>
+      <td>${r.next_action || '—'}</td><td>${r.next_action_date || '—'}</td>
+    </tr>`).join('')}</tbody></table>`;
+  document.querySelectorAll('#team-pipeline tbody tr').forEach((tr) =>
+    tr.addEventListener('click', () => openEdit(tr.dataset.id)));
 }
 
 // ---- Daily report ----
