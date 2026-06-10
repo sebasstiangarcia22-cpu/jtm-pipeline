@@ -42,14 +42,21 @@ $('tab-team').addEventListener('click', () => {
   loadTeam();
 });
 
+let teamOffset = 0; // 0 = today, -1 = yesterday, ...
+const dayStr = (off) => { const d = new Date(); d.setDate(d.getDate() + off); return d.toLocaleDateString('sv-SE'); };
+
+$('day-prev').addEventListener('click', () => { teamOffset--; loadTeam(); });
+$('day-next').addEventListener('click', () => { if (teamOffset < 0) { teamOffset++; loadTeam(); } });
+
 async function loadTeam() {
-  const today = new Date().toLocaleDateString('sv-SE');
-  // Today's reports + who's missing
+  const day = dayStr(teamOffset);
+  $('day-label').textContent = teamOffset === 0 ? 'Hoy' : teamOffset === -1 ? 'Ayer' : day;
+  // Selected day's reports + who's missing
   const [{ data: agents }, { data: reps }] = await Promise.all([
     db.from('profiles').select('id, full_name, role').eq('active', true)
       .in('role', ['bdm', 'asm', 'team_leader', 'gm']),
     db.from('daily_reports').select('agent_id, activity_summary, commitments, submitted_at')
-      .eq('report_date', today),
+      .eq('report_date', day),
   ]);
   const repBy = {}; (reps || []).forEach((r) => { repBy[r.agent_id] = r; });
   $('team-reports').innerHTML = (agents || []).map((a) => {

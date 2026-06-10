@@ -102,7 +102,12 @@
       </style>
 
       <div id="view-team" class="hidden">
-        <h2 style="font-size:14px;text-transform:uppercase;letter-spacing:.5px;color:var(--mut)">Reportes de hoy</h2>
+        <div style="display:flex;align-items:center;gap:10px">
+          <h2 style="font-size:14px;text-transform:uppercase;letter-spacing:.5px;color:var(--mut);margin:0">Reportes</h2>
+          <button class="period-btn" id="day-prev" type="button">◀</button>
+          <strong id="day-label" style="font-size:13px;min-width:90px;text-align:center"></strong>
+          <button class="period-btn" id="day-next" type="button">▶</button>
+        </div>
         <div id="team-reports" class="state">Cargando…</div>
         <h2 style="font-size:14px;text-transform:uppercase;letter-spacing:.5px;color:var(--mut);margin-top:26px">Pipeline del equipo</h2>
         <div id="team-pipeline" class="state">Cargando…</div>
