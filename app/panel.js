@@ -26,14 +26,20 @@ async function showPanel() {
   $('who-role').textContent = profile ? profile.role.toUpperCase() : '—';
   $('f-status').innerHTML = Object.keys(STATUSES).map((s) => `<option>${s}</option>`).join('');
   $('login').classList.add('hidden'); $('panel').classList.remove('hidden');
-  const canViewAll = me && ['gm', 'admin', 'viewer'].includes(me.role);
-  if (canViewAll) { $('admin-tabs').classList.remove('hidden'); loadPipelinePotential(); }
-  if (me && me.role === 'viewer') {
-    // Viewers (Nishil/management) are read-only: Dashboard + Equipo, no own pipeline
-    $('tab-mine').classList.add('hidden');
-    showTab('tab-dash');
-    return;
-  }
+  // Role-based tabs — set EVERY login so no state leaks between sessions in
+  // the same browser (e.g., admin logs out, agent logs in).
+  const role = me?.role || 'bdm';
+  const isViewer = role === 'viewer';
+  const isMgmt = ['gm', 'admin', 'viewer'].includes(role);
+  $('admin-tabs').classList.remove('hidden');
+  $('tab-mine').classList.toggle('hidden', isViewer);
+  $('tab-team').textContent = isMgmt ? 'Equipo' : 'Mi actividad'; // agents: own history (RLS-filtered)
+  $('tab-deals').classList.toggle('hidden', !isMgmt);
+  $('tab-dash').classList.toggle('hidden', !isMgmt);
+  $('help-mgmt').classList.toggle('hidden', !isMgmt);
+  if (isMgmt) loadPipelinePotential();
+  showTab(isViewer ? 'tab-dash' : 'tab-mine');
+  if (isViewer) return;
   await loadPipeline();          // fills rowsById (prospect names for the summary)
   loadDailyReport();
 }
@@ -412,6 +418,11 @@ $('login-form').addEventListener('submit', async (e) => {
   msg.textContent = ''; showPanel();
 });
 $('logout').addEventListener('click', async () => { await db.auth.signOut(); showLogin(); });
+
+// Help / manual modal
+$('help-btn').addEventListener('click', () => $('help-modal').classList.remove('hidden'));
+$('help-close').addEventListener('click', () => $('help-modal').classList.add('hidden'));
+$('help-modal').addEventListener('click', (e) => { if (e.target.id === 'help-modal') $('help-modal').classList.add('hidden'); });
 $('add-toggle').addEventListener('click', () => $('add-form').classList.toggle('hidden'));
 
 $('add-form').addEventListener('submit', async (e) => {

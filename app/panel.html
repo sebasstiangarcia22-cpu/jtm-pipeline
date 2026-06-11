@@ -87,6 +87,7 @@
       <div class="who">
         <span id="who-name"></span>
         <span class="badge" id="who-role"></span>
+        <button class="logout" id="help-btn" title="Manual de uso" style="font-weight:700">?</button>
         <button class="logout" id="logout">Salir</button>
       </div>
     </header>
@@ -239,6 +240,25 @@
           </div>
           <div class="full" id="n-list" style="max-height:220px;overflow:auto"></div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Help / user manual -->
+  <div id="help-modal" class="modal hidden">
+    <div class="modal-card" style="max-width:580px">
+      <div class="modal-head"><strong>📖 Manual del panel</strong><button class="x" id="help-close">✕</button></div>
+      <div style="padding:18px 22px;font-size:13px;line-height:1.75;max-height:70vh;overflow:auto">
+        <p style="margin:0 0 14px"><strong style="color:var(--blue)">📋 Tu reporte diario</strong><br>
+        Trabaja tus negocios durante el día (notas y señales) y al final tu reporte <strong>se arma solo</strong> en la tarjeta de arriba. Revísalo, agrega notas adicionales si quieres, y dale <em>Enviar reporte de hoy</em>. Es <strong>uno por día</strong> (editable solo el mismo día). Si no lo envías, quedas como "Sin reporte" ante management.</p>
+        <p style="margin:0 0 14px"><strong style="color:var(--blue)">🤝 Mis negocios</strong><br>
+        <em>+ Agregar prospecto</em> para registrar uno nuevo. <strong>Clic en cualquier negocio</strong> para actualizar su status, deal size, próximo paso, señal de depósito y notas.</p>
+        <p style="margin:0 0 14px"><strong style="color:var(--blue)">💰 Señal de depósito</strong><br>
+        Cuando un cliente te confirme que va a depositar (o re-depositar), regístralo: monto, fecha esperada y tipo (<em>Nuevo FTD</em> o <em>Re-depósito</em>). Es tu promesa de cierre — se compara después contra lo que entra de verdad.</p>
+        <p style="margin:0 0 14px"><strong style="color:var(--blue)">📝 Notas</strong><br>
+        Escribe el avance de cada negocio en su historial. Las notas <strong>no se pueden borrar ni editar</strong> — son la evolución real del negocio. En <em>Mi actividad</em> ves tu historial de reportes por día.</p>
+        <p id="help-mgmt" class="hidden" style="margin:0;border-top:1px solid var(--line);padding-top:14px"><strong style="color:var(--blue)">👁️ Management</strong><br>
+        <strong>Equipo:</strong> reportes diarios de cada agente (navega por día con ◀ ▶) y actividad reciente. <strong>Negocios:</strong> el funnel consolidado — sub-pestañas por etapa, vista por agente, clic para ver evolución, <em>editar</em> para corregir. <strong>Dashboard:</strong> las cifras financieras (FXBO).</p>
       </div>
     </div>
   </div>
