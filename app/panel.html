@@ -140,7 +140,7 @@
           <button class="period-btn" id="dsub-funded" type="button">Activos</button>
           <button class="period-btn" id="dsub-lost" type="button">Perdidos</button>
           <span style="flex:1"></span>
-          <span style="font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:.4px">Ver:</span>
+          <span id="lbl-view" style="font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:.4px">Ver:</span>
           <button class="period-btn active" id="dview-flat" type="button">Consolidado</button>
           <button class="period-btn" id="dview-agent" type="button">Por agente</button>
         </div>
@@ -168,14 +168,14 @@
 
       <div id="view-team" class="hidden">
         <div style="display:flex;align-items:center;gap:10px">
-          <h2 style="font-size:14px;text-transform:uppercase;letter-spacing:.5px;color:var(--mut);margin:0">Reportes</h2>
+          <h2 id="th-reports" style="font-size:14px;text-transform:uppercase;letter-spacing:.5px;color:var(--mut);margin:0">Reportes</h2>
           <button class="period-btn" id="day-prev" type="button">◀</button>
           <strong id="day-label" style="font-size:13px;min-width:90px;text-align:center"></strong>
           <button class="period-btn" id="day-next" type="button">▶</button>
         </div>
         <div id="team-reports" class="state">Cargando…</div>
 
-        <h2 style="font-size:14px;text-transform:uppercase;letter-spacing:.5px;color:var(--mut);margin-top:26px">Actividad reciente</h2>
+        <h2 id="th-feed" style="font-size:14px;text-transform:uppercase;letter-spacing:.5px;color:var(--mut);margin-top:26px">Actividad reciente</h2>
         <div id="team-feed" class="state">Cargando…</div>
       </div>
 
@@ -247,8 +247,18 @@
   <!-- Help / user manual -->
   <div id="help-modal" class="modal hidden">
     <div class="modal-card" style="max-width:580px">
-      <div class="modal-head"><strong>📖 Manual del panel</strong><button class="x" id="help-close">✕</button></div>
-      <div style="padding:18px 22px;font-size:13px;line-height:1.75;max-height:70vh;overflow:auto">
+      <div class="modal-head"><strong id="help-title">📖 Manual del panel</strong><button class="x" id="help-close">✕</button></div>
+      <div id="help-en" class="hidden" style="padding:18px 22px;font-size:13px;line-height:1.75;max-height:70vh;overflow:auto">
+        <p style="margin:0 0 14px"><strong style="color:var(--blue)">👁️ Team</strong><br>
+        Each agent's daily report (navigate days with ◀ ▶) and the team's recent activity. Agents who didn't submit show as "No report".</p>
+        <p style="margin:0 0 14px"><strong style="color:var(--blue)">🤝 Deals</strong><br>
+        The consolidated funnel: sub-tabs by stage (In progress / Active / Lost), view by agent with subtotals, and per-deal columns — Potential (agent's estimate), Signal (promised deposit), <strong>Real (FXBO)</strong> (what actually came in), and last-activity aging (🟢 recent · 🟡 3–7d · 🔴 stalled).</p>
+        <p style="margin:0 0 14px"><strong style="color:var(--blue)">💬 Notes & questions</strong><br>
+        Click any deal to see its dated history. Use the comment box to leave a note or question for the BDM — it shows highlighted on their panel, and they reply with a note.</p>
+        <p style="margin:0"><strong style="color:var(--blue)">📊 Dashboard</strong><br>
+        Live financial figures from FXBO: KPIs, monthly net/gross, commercial and IB rankings, and the searchable deposit register.</p>
+      </div>
+      <div id="help-es" style="padding:18px 22px;font-size:13px;line-height:1.75;max-height:70vh;overflow:auto">
         <p style="margin:0 0 14px"><strong style="color:var(--blue)">📋 Tu reporte diario</strong><br>
         Trabaja tus negocios durante el día (notas y señales) y al final tu reporte <strong>se arma solo</strong> en la tarjeta de arriba. Revísalo, agrega notas adicionales si quieres, y dale <em>Enviar reporte de hoy</em>. Es <strong>uno por día</strong> (editable solo el mismo día). Si no lo envías, quedas como "Sin reporte" ante management.</p>
         <p style="margin:0 0 14px"><strong style="color:var(--blue)">🤝 Mis negocios</strong><br>

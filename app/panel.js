@@ -14,6 +14,8 @@ const STATUSES = {
 };
 let me = null;
 let rowsById = {};
+let EN = false; // viewers (Nishil/management) get English UI
+const L = (es, en) => (EN ? en : es);
 const money = (n) => '$' + (Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const statusOptions = (sel) => Object.keys(STATUSES).map((s) => `<option ${s === sel ? 'selected' : ''}>${s}</option>`).join('');
 
@@ -31,12 +33,23 @@ async function showPanel() {
   const role = me?.role || 'bdm';
   const isViewer = role === 'viewer';
   const isMgmt = ['gm', 'admin', 'viewer'].includes(role);
+  EN = isViewer; // English UI for viewers (Nishil/management)
   $('admin-tabs').classList.remove('hidden');
   $('tab-mine').classList.toggle('hidden', isViewer);
-  $('tab-team').textContent = isMgmt ? 'Equipo' : 'Mi actividad'; // agents: own history (RLS-filtered)
+  $('tab-team').textContent = isViewer ? 'Team' : (isMgmt ? 'Equipo' : 'Mi actividad');
+  $('tab-deals').textContent = L('Negocios', 'Deals');
   $('tab-deals').classList.toggle('hidden', !isMgmt);
   $('tab-dash').classList.toggle('hidden', !isMgmt);
   $('help-mgmt').classList.toggle('hidden', !isMgmt);
+  // Viewer statics in English
+  $('th-reports').textContent = L('Reportes', 'Reports');
+  $('th-feed').textContent = L('Actividad reciente', 'Recent activity');
+  $('lbl-view').textContent = L('Ver:', 'View:');
+  $('dview-flat').textContent = L('Consolidado', 'Consolidated');
+  $('dview-agent').textContent = L('Por agente', 'By agent');
+  $('help-title').textContent = L('📖 Manual del panel', '📖 Panel guide');
+  $('help-es').classList.toggle('hidden', EN);
+  $('help-en').classList.toggle('hidden', !EN);
   if (isMgmt) loadPipelinePotential();
   showTab(isViewer ? 'tab-dash' : 'tab-mine');
   if (isViewer) return;
@@ -126,9 +139,9 @@ function renderDeals() {
   if (!dealsCache) return;
   const { deals, realBy, lastNote } = dealsCache;
   const aging = (id) => {
-    if (!lastNote[id]) return { txt: 'sin actividad', dot: 'gray' };
+    if (!lastNote[id]) return { txt: L('sin actividad', 'no activity'), dot: 'gray' };
     const days = Math.floor((Date.now() - new Date(lastNote[id])) / 86400000);
-    return { txt: days === 0 ? 'hoy' : days === 1 ? 'ayer' : `hace ${days}d`, dot: days < 3 ? 'green' : days <= 7 ? 'yellow' : 'red' };
+    return { txt: days === 0 ? L('hoy', 'today') : days === 1 ? L('ayer', 'yesterday') : L(`hace ${days}d`, `${days}d ago`), dot: days < 3 ? 'green' : days <= 7 ? 'yellow' : 'red' };
   };
 
   // Global summary strip (whole funnel)
@@ -138,17 +151,17 @@ function renderDeals() {
   const activos = deals.filter((d) => dealCategory(d) !== 'lost').length;
   $('deals-kpis').innerHTML = [
     ['Pipeline Potential', money(totPipe), 'style="color:var(--blue)"'],
-    ['En señales', money(totSig), 'style="color:#facc15"'],
-    ['Real depositado (FXBO)', money(totReal), 'class="kpi-val pos"'],
-    ['Negocios activos', activos, ''],
+    [L('En señales', 'In signals'), money(totSig), 'style="color:#facc15"'],
+    [L('Real depositado (FXBO)', 'Real deposited (FXBO)'), money(totReal), 'class="kpi-val pos"'],
+    [L('Negocios activos', 'Active deals'), activos, ''],
   ].map(([lbl, val, attr]) => `<div class="kpi"><div class="kpi-val" ${attr}>${val}</div><div class="kpi-lbl">${lbl}</div></div>`).join('');
 
   // Sub-tab counts
   const counts = { process: 0, funded: 0, lost: 0 };
   deals.forEach((d) => counts[dealCategory(d)]++);
-  $('dsub-process').textContent = `En proceso (${counts.process})`;
-  $('dsub-funded').textContent = `Activos (${counts.funded})`;
-  $('dsub-lost').textContent = `Perdidos (${counts.lost})`;
+  $('dsub-process').textContent = `${L('En proceso', 'In progress')} (${counts.process})`;
+  $('dsub-funded').textContent = `${L('Activos', 'Active')} (${counts.funded})`;
+  $('dsub-lost').textContent = `${L('Perdidos', 'Lost')} (${counts.lost})`;
 
   // Filter current sub-tab + its priority sorting
   const subset = deals.filter((d) => dealCategory(d) === dealsSub);
@@ -159,17 +172,17 @@ function renderDeals() {
     subset.sort((a, b) => ((sig(b) > 0) - (sig(a) > 0))
       || (STAGE_RANK[a.status] ?? 99) - (STAGE_RANK[b.status] ?? 99)
       || (Number(b.deal_size) || 0) - (Number(a.deal_size) || 0));
-    $('deals-hint').textContent = 'Prioridad: señal de depósito activa y cercanía al FTD.';
+    $('deals-hint').textContent = L('Prioridad: señal de depósito activa y cercanía al FTD.', 'Priority: active deposit signal and proximity to FTD.');
   } else if (dealsSub === 'funded') {
     // Active deposit signals first (re-deposits about to land)
     subset.sort((a, b) => ((sig(b) > 0) - (sig(a) > 0)) || sig(b) - sig(a) || realOf(b) - realOf(a));
-    $('deals-hint').textContent = 'Prioridad: señales de depósito activas (re-depósitos por caer).';
+    $('deals-hint').textContent = L('Prioridad: señales de depósito activas (re-depósitos por caer).', 'Priority: active deposit signals (re-deposits about to land).');
   } else {
     subset.sort((a, b) => (Number(b.deal_size) || 0) - (Number(a.deal_size) || 0));
-    $('deals-hint').textContent = 'Negocios perdidos o inactivos — fuera del funnel activo.';
+    $('deals-hint').textContent = L('Negocios perdidos o inactivos — fuera del funnel activo.', 'Lost or inactive deals — out of the active funnel.');
   }
 
-  if (!subset.length) { $('deals-table').innerHTML = '<div class="state">Nada en esta categoría.</div>'; return; }
+  if (!subset.length) { $('deals-table').innerHTML = `<div class="state">${L('Nada en esta categoría.', 'Nothing in this category.')}</div>`; return; }
 
   const isAdmin = ['gm', 'admin'].includes(me.role);
   const dealRow = (d) => {
@@ -184,11 +197,11 @@ function renderDeals() {
       <td class="num ${real ? 'pos' : ''}">${real != null ? money(real) : '—'}</td>
       <td><span style="display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px;background:${a.dot === 'green' ? 'var(--green)' : a.dot === 'yellow' ? '#facc15' : a.dot === 'red' ? '#f85149' : '#6b7280'}"></span>${a.txt}</td>
       <td>${d.next_action || '—'}${d.next_action_date ? ` <span style="color:var(--mut);font-size:11px">· ${d.next_action_date}</span>` : ''}</td>
-      ${isAdmin ? `<td><a href="#" class="deal-edit" data-id="${d.id}" style="color:var(--blue);font-size:12px">editar</a></td>` : ''}
+      ${isAdmin ? `<td><a href="#" class="deal-edit" data-id="${d.id}" style="color:var(--blue);font-size:12px">${L('editar', 'edit')}</a></td>` : ''}
     </tr><tr class="notes-tr hidden" data-notes-for="${d.id}"><td colspan="${isAdmin ? 9 : 8}" style="background:#10151c"></td></tr>`;
   };
   const THEAD = `<thead><tr>
-    <th>Negocio</th><th>BDM</th><th>Status</th><th class="num">Potencial</th><th class="num">Señal</th><th class="num">Real (FXBO)</th><th>Último avance</th><th>Próximo paso</th>${isAdmin ? '<th></th>' : ''}
+    <th>${L('Negocio', 'Deal')}</th><th>BDM</th><th>Status</th><th class="num">${L('Potencial', 'Potential')}</th><th class="num">${L('Señal', 'Signal')}</th><th class="num">Real (FXBO)</th><th>${L('Último avance', 'Last activity')}</th><th>${L('Próximo paso', 'Next step')}</th>${isAdmin ? '<th></th>' : ''}
     </tr></thead>`;
 
   if (dealsMode === 'agent') {
@@ -207,9 +220,9 @@ function renderDeals() {
         <div class="agent-head" data-group="${i}" style="display:flex;align-items:center;gap:12px;padding:12px 14px;flex-wrap:wrap;cursor:pointer">
           <span class="agent-arrow" style="color:var(--mut)">›</span>
           <strong style="font-size:14px">${g.agent}</strong>
-          <span class="badge">${g.list.length} negocio${g.list.length === 1 ? '' : 's'}</span>
-          <span style="font-size:12px;color:var(--blue)">Potencial ${money(g.pot)}</span>
-          <span style="font-size:12px;color:#facc15">Señales ${money(g.sigT)}</span>
+          <span class="badge">${g.list.length} ${L(g.list.length === 1 ? 'negocio' : 'negocios', g.list.length === 1 ? 'deal' : 'deals')}</span>
+          <span style="font-size:12px;color:var(--blue)">${L('Potencial', 'Potential')} ${money(g.pot)}</span>
+          <span style="font-size:12px;color:#facc15">${L('Señales', 'Signals')} ${money(g.sigT)}</span>
           <span style="font-size:12px;color:var(--green)">Real ${money(g.real)}</span>
         </div>
         <div class="agent-body hidden" data-group-body="${i}" style="padding:0 10px 10px">
@@ -248,7 +261,7 @@ $('day-next').addEventListener('click', () => { if (teamOffset < 0) { teamOffset
 
 async function loadTeam() {
   const day = dayStr(teamOffset);
-  $('day-label').textContent = teamOffset === 0 ? 'Hoy' : teamOffset === -1 ? 'Ayer' : day;
+  $('day-label').textContent = teamOffset === 0 ? L('Hoy', 'Today') : teamOffset === -1 ? L('Ayer', 'Yesterday') : day;
   // Selected day's reports + who's missing
   const [{ data: agents }, { data: reps }] = await Promise.all([
     db.from('profiles').select('id, full_name, role').eq('active', true)
@@ -261,13 +274,13 @@ async function loadTeam() {
     const r = repBy[a.id];
     if (!r) return `<div style="border:1px solid var(--line);border-radius:10px;background:var(--card);padding:12px 14px;margin:8px 0">
       <strong>${a.full_name}</strong> <span class="badge">${a.role.toUpperCase()}</span>
-      <span style="color:#fb923c;font-weight:700;margin-left:8px">⚠️ Sin reporte</span></div>`;
+      <span style="color:#fb923c;font-weight:700;margin-left:8px">⚠️ ${L('Sin reporte', 'No report')}</span></div>`;
     const hora = new Date(r.submitted_at).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
     return `<div style="border:1px solid var(--line);border-radius:10px;background:var(--card);padding:12px 14px;margin:8px 0">
       <strong>${a.full_name}</strong> <span class="badge">${a.role.toUpperCase()}</span>
       <span style="color:var(--green);font-weight:700;margin-left:8px">✓ ${hora}</span>
       <div style="white-space:pre-wrap;margin-top:8px;font-size:13px;color:var(--mut);line-height:1.6">${r.activity_summary || ''}${r.commitments ? '\n— ' + r.commitments : ''}</div></div>`;
-  }).join('') || '<div class="state">Sin agentes.</div>';
+  }).join('') || `<div class="state">${L('Sin agentes.', 'No agents.')}</div>`;
 
   // Prospect names for the feed (the funnel/pipeline itself lives in Negocios)
   const { data: names } = await db.from('pipeline_entries').select('id, prospect_name');
@@ -275,15 +288,15 @@ async function loadTeam() {
 
   // Activity feed: latest notes across all prospects
   const { data: feed } = await db.from('notes')
-    .select('note_date, text_original, entity_id, author:profiles!notes_author_id_fkey(full_name)')
+    .select('note_date, text_original, entity_id, author_name, author_is_mgmt')
     .eq('entity_type', 'pipeline')
     .order('created_at', { ascending: false }).limit(25);
   $('team-feed').innerHTML = (feed || []).map((n) =>
     `<div style="padding:9px 2px;border-bottom:1px solid var(--line);font-size:13px;line-height:1.5">
-      <strong style="color:var(--blue)">${n.note_date}</strong>
+      ${n.author_is_mgmt ? '<span style="color:var(--blue);font-weight:700">💬</span> ' : ''}<strong style="color:var(--blue)">${n.note_date}</strong>
       <span class="badge" style="margin:0 4px">${rowsById[n.entity_id]?.prospect_name || '—'}</span>
-      ${n.text_original} <span style="color:var(--mut);font-size:11px">· ${n.author?.full_name || ''}</span>
-    </div>`).join('') || '<div class="state">Sin actividad aún.</div>';
+      ${n.text_original} <span style="color:var(--mut);font-size:11px">· ${n.author_name || ''}</span>
+    </div>`).join('') || `<div class="state">${L('Sin actividad aún.', 'No activity yet.')}</div>`;
 }
 
 // Expand/collapse a prospect's evolution under its row
@@ -292,22 +305,22 @@ async function toggleTeamNotes(id, containerSel = '#deals-table') {
   if (!tr) return;
   if (!tr.classList.contains('hidden')) { tr.classList.add('hidden'); return; }
   const cell = tr.querySelector('td[colspan]');
-  cell.innerHTML = '<div class="state">Cargando evolución…</div>';
+  cell.innerHTML = `<div class="state">${L('Cargando evolución…', 'Loading history…')}</div>`;
   tr.classList.remove('hidden');
   const { data: notes } = await db.from('notes')
-    .select('note_date, text_original, author_is_mgmt, author:profiles!notes_author_id_fkey(full_name)')
+    .select('note_date, text_original, author_is_mgmt, author_name')
     .eq('entity_type', 'pipeline').eq('entity_id', id)
     .order('created_at', { ascending: false });
   // Management (gm/admin/viewer) can drop a note/question right here
   const isMgmt = ['gm', 'admin', 'viewer'].includes(me.role);
   const commentBox = isMgmt ? `<div style="padding:8px 6px;border-bottom:1px solid var(--line);display:flex;gap:8px">
-      <input class="mgmt-comment" placeholder="💬 Deja una nota o pregunta al BDM…" style="flex:1;padding:8px 10px;background:#0e1116;border:1px solid var(--line);border-radius:8px;color:var(--txt);font-size:13px;outline:none" />
-      <button class="btn-add mgmt-comment-send">Enviar</button></div>` : '';
+      <input class="mgmt-comment" placeholder="${L('💬 Deja una nota o pregunta al BDM…', '💬 Leave a note or question for the BDM…')}" style="flex:1;padding:8px 10px;background:#0e1116;border:1px solid var(--line);border-radius:8px;color:var(--txt);font-size:13px;outline:none" />
+      <button class="btn-add mgmt-comment-send">${L('Enviar', 'Send')}</button></div>` : '';
   cell.innerHTML = commentBox + ((notes || []).length
     ? notes.map((n) => `<div style="padding:7px 6px;font-size:13px;line-height:1.5;border-bottom:1px solid var(--line)${n.author_is_mgmt ? ';background:#15233a;border-left:3px solid var(--blue)' : ''}">
         ${n.author_is_mgmt ? '<span style="color:var(--blue);font-weight:700">💬</span> ' : ''}<strong style="color:var(--blue)">${n.note_date}</strong> — ${n.text_original}
-        <span style="color:var(--mut);font-size:11px">· ${n.author?.full_name || 'Management'}</span></div>`).join('')
-    : '<div class="state">Sin notas aún.</div>');
+        <span style="color:var(--mut);font-size:11px">· ${n.author_name || ''}</span></div>`).join('')
+    : `<div class="state">${L('Sin notas aún.', 'No notes yet.')}</div>`);
   const sendBtn = cell.querySelector('.mgmt-comment-send');
   if (sendBtn) sendBtn.addEventListener('click', async () => {
     const text = cell.querySelector('.mgmt-comment').value.trim();
@@ -421,14 +434,14 @@ async function loadNotes(id) {
   const el = $('n-list');
   el.innerHTML = '<div class="state">Cargando notas…</div>';
   const { data: notes, error } = await db.from('notes')
-    .select('note_date, text_original, created_at, author_is_mgmt')
+    .select('note_date, text_original, created_at, author_is_mgmt, author_name')
     .eq('entity_type', 'pipeline').eq('entity_id', id)
     .order('created_at', { ascending: false });
   if (error) { el.innerHTML = `<div class="state">Error: ${error.message}</div>`; return; }
   if (!notes.length) { el.innerHTML = '<div class="state">Sin notas aún. Agrega la primera.</div>'; return; }
   el.innerHTML = notes.map((n) =>
     `<div style="padding:9px ${n.author_is_mgmt ? '8px' : '2px'};border-bottom:1px solid var(--line);font-size:13px;line-height:1.5${n.author_is_mgmt ? ';background:#15233a;border-left:3px solid var(--blue);border-radius:4px' : ''}">
-      ${n.author_is_mgmt ? '<span style="color:var(--blue);font-weight:700">💬 Management</span> · ' : ''}<strong style="color:var(--blue)">${n.note_date}</strong> — ${n.text_original}
+      ${n.author_is_mgmt ? `<span style="color:var(--blue);font-weight:700">💬 ${n.author_name || 'Management'}</span> · ` : ''}<strong style="color:var(--blue)">${n.note_date}</strong> — ${n.text_original}
     </div>`).join('');
 }
 
