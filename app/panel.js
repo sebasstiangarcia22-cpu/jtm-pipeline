@@ -186,7 +186,7 @@ function renderDeals() {
     </tr></thead>`;
 
   if (dealsMode === 'agent') {
-    // Group by team member (subtotals per agent), ordered by pipeline value
+    // Group by team member: collapsed accordion (header = subtotals; click to expand)
     const groups = {};
     subset.forEach((d) => { const k = d.owner?.full_name || '—'; (groups[k] ||= []).push(d); });
     $('deals-table').innerHTML = Object.entries(groups)
@@ -197,16 +197,26 @@ function renderDeals() {
         real: list.reduce((s, d) => s + ((d.client_login && realBy[d.client_login]) || 0), 0),
       }))
       .sort((a, b) => b.pot - a.pot)
-      .map((g) => `<div style="margin-bottom:20px">
-        <div style="display:flex;align-items:center;gap:12px;padding:10px 2px;flex-wrap:wrap">
+      .map((g, i) => `<div style="margin-bottom:10px;border:1px solid var(--line);border-radius:10px;background:var(--card)">
+        <div class="agent-head" data-group="${i}" style="display:flex;align-items:center;gap:12px;padding:12px 14px;flex-wrap:wrap;cursor:pointer">
+          <span class="agent-arrow" style="color:var(--mut)">›</span>
           <strong style="font-size:14px">${g.agent}</strong>
           <span class="badge">${g.list.length} negocio${g.list.length === 1 ? '' : 's'}</span>
           <span style="font-size:12px;color:var(--blue)">Potencial ${money(g.pot)}</span>
           <span style="font-size:12px;color:#facc15">Señales ${money(g.sigT)}</span>
           <span style="font-size:12px;color:var(--green)">Real ${money(g.real)}</span>
         </div>
-        <table>${THEAD}<tbody>${g.list.map(dealRow).join('')}</tbody></table>
+        <div class="agent-body hidden" data-group-body="${i}" style="padding:0 10px 10px">
+          <table>${THEAD}<tbody>${g.list.map(dealRow).join('')}</tbody></table>
+        </div>
       </div>`).join('');
+    document.querySelectorAll('#deals-table .agent-head').forEach((h) =>
+      h.addEventListener('click', () => {
+        const body = document.querySelector(`[data-group-body="${h.dataset.group}"]`);
+        const open = !body.classList.contains('hidden');
+        body.classList.toggle('hidden');
+        h.querySelector('.agent-arrow').textContent = open ? '›' : '⌄';
+      }));
   } else {
     $('deals-table').innerHTML = `<table>${THEAD}<tbody>${subset.map(dealRow).join('')}</tbody></table>`;
   }
