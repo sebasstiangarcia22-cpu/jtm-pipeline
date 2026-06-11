@@ -295,14 +295,30 @@ async function toggleTeamNotes(id, containerSel = '#deals-table') {
   cell.innerHTML = '<div class="state">Cargando evolución…</div>';
   tr.classList.remove('hidden');
   const { data: notes } = await db.from('notes')
-    .select('note_date, text_original, author:profiles!notes_author_id_fkey(full_name)')
+    .select('note_date, text_original, author_is_mgmt, author:profiles!notes_author_id_fkey(full_name)')
     .eq('entity_type', 'pipeline').eq('entity_id', id)
     .order('created_at', { ascending: false });
-  cell.innerHTML = (notes || []).length
-    ? notes.map((n) => `<div style="padding:7px 6px;font-size:13px;line-height:1.5;border-bottom:1px solid var(--line)">
-        <strong style="color:var(--blue)">${n.note_date}</strong> — ${n.text_original}
-        <span style="color:var(--mut);font-size:11px">· ${n.author?.full_name || ''}</span></div>`).join('')
-    : '<div class="state">Sin notas aún.</div>';
+  // Management (gm/admin/viewer) can drop a note/question right here
+  const isMgmt = ['gm', 'admin', 'viewer'].includes(me.role);
+  const commentBox = isMgmt ? `<div style="padding:8px 6px;border-bottom:1px solid var(--line);display:flex;gap:8px">
+      <input class="mgmt-comment" placeholder="💬 Deja una nota o pregunta al BDM…" style="flex:1;padding:8px 10px;background:#0e1116;border:1px solid var(--line);border-radius:8px;color:var(--txt);font-size:13px;outline:none" />
+      <button class="btn-add mgmt-comment-send">Enviar</button></div>` : '';
+  cell.innerHTML = commentBox + ((notes || []).length
+    ? notes.map((n) => `<div style="padding:7px 6px;font-size:13px;line-height:1.5;border-bottom:1px solid var(--line)${n.author_is_mgmt ? ';background:#15233a;border-left:3px solid var(--blue)' : ''}">
+        ${n.author_is_mgmt ? '<span style="color:var(--blue);font-weight:700">💬</span> ' : ''}<strong style="color:var(--blue)">${n.note_date}</strong> — ${n.text_original}
+        <span style="color:var(--mut);font-size:11px">· ${n.author?.full_name || 'Management'}</span></div>`).join('')
+    : '<div class="state">Sin notas aún.</div>');
+  const sendBtn = cell.querySelector('.mgmt-comment-send');
+  if (sendBtn) sendBtn.addEventListener('click', async () => {
+    const text = cell.querySelector('.mgmt-comment').value.trim();
+    if (!text) return;
+    sendBtn.disabled = true;
+    const { error } = await db.from('notes').insert({
+      entity_type: 'pipeline', entity_id: id, author_id: me.id, text_original: text,
+    });
+    sendBtn.disabled = false;
+    if (!error) { tr.classList.add('hidden'); toggleTeamNotes(id, containerSel); }
+  });
 }
 
 // ---- Daily report ----
@@ -363,10 +379,18 @@ async function loadPipeline() {
   if (!rows.length) { el.innerHTML = '<div class="state">Aún no tienes prospectos. Agrega el primero. 👆</div>'; return; }
   rowsById = {};
   rows.forEach((r) => { rowsById[r.id] = r; });
+  // 💬 unanswered-management-note flag (agents only): latest note per deal is from mgmt
+  const lastMgmt = {};
+  if (!['gm', 'admin', 'viewer'].includes(me.role)) {
+    const { data: flags } = await db.from('notes')
+      .select('entity_id, author_is_mgmt').eq('entity_type', 'pipeline')
+      .order('created_at', { ascending: false });
+    (flags || []).forEach((n) => { if (!(n.entity_id in lastMgmt)) lastMgmt[n.entity_id] = n.author_is_mgmt; });
+  }
   el.innerHTML = `<table><thead><tr>
     <th>Prospecto</th><th>País</th><th>Fuente</th><th>Status</th><th class="num">Deal size</th><th>Próximo paso</th><th>Fecha</th>
     </tr></thead><tbody>${rows.map((r) => `<tr data-id="${r.id}">
-      <td>${r.prospect_name}</td><td>${r.country || '—'}</td><td>${r.source || '—'}</td>
+      <td>${r.prospect_name}${lastMgmt[r.id] ? ' <span title="Nota de management — respóndele con una nota">💬</span>' : ''}</td><td>${r.country || '—'}</td><td>${r.source || '—'}</td>
       <td><span class="pill b-${r.badge_color || 'gray'}">${r.status || '—'}</span></td>
       <td class="num">${r.deal_size ? money(r.deal_size) : '—'}</td>
       <td>${r.next_action || '—'}</td><td>${r.next_action_date || '—'}</td>
@@ -397,14 +421,14 @@ async function loadNotes(id) {
   const el = $('n-list');
   el.innerHTML = '<div class="state">Cargando notas…</div>';
   const { data: notes, error } = await db.from('notes')
-    .select('note_date, text_original, created_at')
+    .select('note_date, text_original, created_at, author_is_mgmt')
     .eq('entity_type', 'pipeline').eq('entity_id', id)
     .order('created_at', { ascending: false });
   if (error) { el.innerHTML = `<div class="state">Error: ${error.message}</div>`; return; }
   if (!notes.length) { el.innerHTML = '<div class="state">Sin notas aún. Agrega la primera.</div>'; return; }
   el.innerHTML = notes.map((n) =>
-    `<div style="padding:9px 2px;border-bottom:1px solid var(--line);font-size:13px;line-height:1.5">
-      <strong style="color:var(--blue)">${n.note_date}</strong> — ${n.text_original}
+    `<div style="padding:9px ${n.author_is_mgmt ? '8px' : '2px'};border-bottom:1px solid var(--line);font-size:13px;line-height:1.5${n.author_is_mgmt ? ';background:#15233a;border-left:3px solid var(--blue);border-radius:4px' : ''}">
+      ${n.author_is_mgmt ? '<span style="color:var(--blue);font-weight:700">💬 Management</span> · ' : ''}<strong style="color:var(--blue)">${n.note_date}</strong> — ${n.text_original}
     </div>`).join('');
 }
 
