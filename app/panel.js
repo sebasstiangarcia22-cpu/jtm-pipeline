@@ -165,6 +165,7 @@ function renderDeals() {
 
   if (!subset.length) { $('deals-table').innerHTML = '<div class="state">Nada en esta categoría.</div>'; return; }
 
+  const isAdmin = ['gm', 'admin'].includes(me.role);
   const dealRow = (d) => {
     const a = aging(d.id);
     const real = d.client_login ? (realBy[d.client_login] || 0) : null;
@@ -177,10 +178,11 @@ function renderDeals() {
       <td class="num ${real ? 'pos' : ''}">${real != null ? money(real) : '—'}</td>
       <td><span style="display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px;background:${a.dot === 'green' ? 'var(--green)' : a.dot === 'yellow' ? '#facc15' : a.dot === 'red' ? '#f85149' : '#6b7280'}"></span>${a.txt}</td>
       <td>${d.next_action || '—'}${d.next_action_date ? ` <span style="color:var(--mut);font-size:11px">· ${d.next_action_date}</span>` : ''}</td>
-    </tr><tr class="notes-tr hidden" data-notes-for="${d.id}"><td colspan="8" style="background:#10151c"></td></tr>`;
+      ${isAdmin ? `<td><a href="#" class="deal-edit" data-id="${d.id}" style="color:var(--blue);font-size:12px">editar</a></td>` : ''}
+    </tr><tr class="notes-tr hidden" data-notes-for="${d.id}"><td colspan="${isAdmin ? 9 : 8}" style="background:#10151c"></td></tr>`;
   };
   const THEAD = `<thead><tr>
-    <th>Negocio</th><th>BDM</th><th>Status</th><th class="num">Potencial</th><th class="num">Señal</th><th class="num">Real (FXBO)</th><th>Último avance</th><th>Próximo paso</th>
+    <th>Negocio</th><th>BDM</th><th>Status</th><th class="num">Potencial</th><th class="num">Señal</th><th class="num">Real (FXBO)</th><th>Último avance</th><th>Próximo paso</th>${isAdmin ? '<th></th>' : ''}
     </tr></thead>`;
 
   if (dealsMode === 'agent') {
@@ -210,6 +212,8 @@ function renderDeals() {
   }
   document.querySelectorAll('#deals-table .deal-row').forEach((tr) =>
     tr.addEventListener('click', () => toggleTeamNotes(tr.dataset.id, '#deals-table')));
+  document.querySelectorAll('#deals-table .deal-edit').forEach((a) =>
+    a.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); openEdit(a.dataset.id); }));
 }
 
 // Pipeline Potential KPI (sum of deal sizes — login-only, like the old $530K+)
@@ -249,42 +253,9 @@ async function loadTeam() {
       <div style="white-space:pre-wrap;margin-top:8px;font-size:13px;color:var(--mut);line-height:1.6">${r.activity_summary || ''}${r.commitments ? '\n— ' + r.commitments : ''}</div></div>`;
   }).join('') || '<div class="state">Sin agentes.</div>';
 
-  // Team pipeline (RLS: admin and viewers see everything)
-  const isAdmin = ['gm', 'admin'].includes(me.role);
-  const { data: rows } = await db.from('pipeline_entries')
-    .select('id, prospect_name, country, status, badge_color, deal_size, next_action, next_action_date, deposit_signal_amount, deposit_signal_date, deposit_signal_type, source, owner:profiles!pipeline_entries_owner_id_fkey(full_name)')
-    .order('updated_at', { ascending: false });
-  if (!rows || !rows.length) {
-    $('funnel-summary').innerHTML = ''; $('team-pipeline').innerHTML = '<div class="state">Sin prospectos aún.</div>';
-    $('team-feed').innerHTML = '<div class="state">Sin actividad.</div>'; return;
-  }
-  rows.forEach((r) => { rowsById[r.id] = r; });
-
-  // Funnel summary: counts by status
-  const counts = {};
-  rows.forEach((r) => { const k = r.status || '—'; (counts[k] ||= { n: 0, color: r.badge_color || 'gray' }).n++; });
-  $('funnel-summary').innerHTML = Object.entries(counts)
-    .sort((a, b) => b[1].n - a[1].n)
-    .map(([s, c]) => `<div style="background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 16px;text-align:center">
-      <div style="font-size:20px;font-weight:800">${c.n}</div>
-      <span class="pill b-${c.color}">${s}</span></div>`).join('');
-
-  // Pipeline table with expandable evolution (old-dashboard style)
-  $('team-pipeline').innerHTML = `<table><thead><tr>
-    <th></th><th>Prospecto</th><th>Agente</th><th>Status</th><th class="num">Deal size</th><th>Próximo paso</th><th>Fecha</th>${isAdmin ? '<th></th>' : ''}
-    </tr></thead><tbody>${rows.map((r) => `<tr data-id="${r.id}" class="team-row">
-      <td style="color:var(--mut)">›</td>
-      <td>${r.prospect_name}</td><td>${r.owner?.full_name || '—'}</td>
-      <td><span class="pill b-${r.badge_color || 'gray'}">${r.status || '—'}</span></td>
-      <td class="num">${r.deal_size ? money(r.deal_size) : '—'}</td>
-      <td>${r.next_action || '—'}</td><td>${r.next_action_date || '—'}</td>
-      ${isAdmin ? `<td><a href="#" class="team-edit" data-id="${r.id}" style="color:var(--blue);font-size:12px">editar</a></td>` : ''}
-    </tr><tr class="notes-tr hidden" data-notes-for="${r.id}"><td></td><td colspan="${isAdmin ? 7 : 6}" style="background:#10151c"></td></tr>`).join('')}</tbody></table>`;
-
-  document.querySelectorAll('#team-pipeline .team-row').forEach((tr) =>
-    tr.addEventListener('click', () => toggleTeamNotes(tr.dataset.id)));
-  document.querySelectorAll('#team-pipeline .team-edit').forEach((a) =>
-    a.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); openEdit(a.dataset.id); }));
+  // Prospect names for the feed (the funnel/pipeline itself lives in Negocios)
+  const { data: names } = await db.from('pipeline_entries').select('id, prospect_name');
+  (names || []).forEach((r) => { rowsById[r.id] = { ...(rowsById[r.id] || {}), ...r }; });
 
   // Activity feed: latest notes across all prospects
   const { data: feed } = await db.from('notes')
@@ -299,9 +270,8 @@ async function loadTeam() {
     </div>`).join('') || '<div class="state">Sin actividad aún.</div>';
 }
 
-// Expand/collapse a prospect's evolution under its row (scoped per table,
-// since the same prospect can appear in Equipo and Negocios)
-async function toggleTeamNotes(id, containerSel = '#team-pipeline') {
+// Expand/collapse a prospect's evolution under its row
+async function toggleTeamNotes(id, containerSel = '#deals-table') {
   const tr = document.querySelector(`${containerSel} tr[data-notes-for="${id}"]`);
   if (!tr) return;
   if (!tr.classList.contains('hidden')) { tr.classList.add('hidden'); return; }
