@@ -52,7 +52,7 @@ Object.keys(TABS).forEach((t) => $(t).addEventListener('click', () => showTab(t)
 
 // ---- Negocios: one consolidated deals funnel, in 3 sub-tabs ----
 const LOST_STATUSES = ['Lost', 'Inactive', 'Declined'];
-const FUNDED_STATUSES = ['Deposited', 'Active (funded)'];
+const FUNDED_STATUSES = ['Deposited', 'Active (funded)', 'Hired'];
 // Proximity to FTD: lower rank = closer to closing
 const STAGE_RANK = {
   'Closing': 0, 'HOT': 1,
