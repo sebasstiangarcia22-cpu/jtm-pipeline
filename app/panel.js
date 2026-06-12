@@ -16,6 +16,17 @@ let me = null;
 let rowsById = {};
 let EN = false; // viewers (Nishil/management) get English UI
 const L = (es, en) => (EN ? en : es);
+
+// Auto-translate a note ES->EN (MyMemory, free). Returns null on any failure —
+// the note is saved anyway and the original is shown as fallback.
+async function translateNote(text) {
+  try {
+    const u = 'https://api.mymemory.translated.net/get?langpair=es|en&de=sebasstiangarcia22@gmail.com&q='
+      + encodeURIComponent(text.slice(0, 490));
+    const j = await fetch(u, { signal: AbortSignal.timeout(4000) }).then((r) => r.json());
+    return (j?.responseStatus == 200 && j.responseData?.translatedText) || null;
+  } catch { return null; }
+}
 const money = (n) => '$' + (Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const statusOptions = (sel) => Object.keys(STATUSES).map((s) => `<option ${s === sel ? 'selected' : ''}>${s}</option>`).join('');
 
@@ -288,14 +299,14 @@ async function loadTeam() {
 
   // Activity feed: latest notes across all prospects
   const { data: feed } = await db.from('notes')
-    .select('note_date, text_original, entity_id, author_name, author_is_mgmt')
+    .select('note_date, text_original, text_en, entity_id, author_name, author_is_mgmt')
     .eq('entity_type', 'pipeline')
     .order('created_at', { ascending: false }).limit(25);
   $('team-feed').innerHTML = (feed || []).map((n) =>
     `<div style="padding:9px 2px;border-bottom:1px solid var(--line);font-size:13px;line-height:1.5">
       ${n.author_is_mgmt ? '<span style="color:var(--blue);font-weight:700">💬</span> ' : ''}<strong style="color:var(--blue)">${n.note_date}</strong>
       <span class="badge" style="margin:0 4px">${rowsById[n.entity_id]?.prospect_name || '—'}</span>
-      ${n.text_original} <span style="color:var(--mut);font-size:11px">· ${n.author_name || ''}</span>
+      ${EN ? (n.text_en || n.text_original) : n.text_original} <span style="color:var(--mut);font-size:11px">· ${n.author_name || ''}</span>
     </div>`).join('') || `<div class="state">${L('Sin actividad aún.', 'No activity yet.')}</div>`;
 }
 
@@ -308,7 +319,7 @@ async function toggleTeamNotes(id, containerSel = '#deals-table') {
   cell.innerHTML = `<div class="state">${L('Cargando evolución…', 'Loading history…')}</div>`;
   tr.classList.remove('hidden');
   const { data: notes } = await db.from('notes')
-    .select('note_date, text_original, author_is_mgmt, author_name')
+    .select('note_date, text_original, text_en, author_is_mgmt, author_name')
     .eq('entity_type', 'pipeline').eq('entity_id', id)
     .order('created_at', { ascending: false });
   // Management (gm/admin/viewer) can drop a note/question right here
@@ -318,7 +329,7 @@ async function toggleTeamNotes(id, containerSel = '#deals-table') {
       <button class="btn-add mgmt-comment-send">${L('Enviar', 'Send')}</button></div>` : '';
   cell.innerHTML = commentBox + ((notes || []).length
     ? notes.map((n) => `<div style="padding:7px 6px;font-size:13px;line-height:1.5;border-bottom:1px solid var(--line)${n.author_is_mgmt ? ';background:#15233a;border-left:3px solid var(--blue)' : ''}">
-        ${n.author_is_mgmt ? '<span style="color:var(--blue);font-weight:700">💬</span> ' : ''}<strong style="color:var(--blue)">${n.note_date}</strong> — ${n.text_original}
+        ${n.author_is_mgmt ? '<span style="color:var(--blue);font-weight:700">💬</span> ' : ''}<strong style="color:var(--blue)">${n.note_date}</strong> — ${EN ? (n.text_en || n.text_original) : n.text_original}
         <span style="color:var(--mut);font-size:11px">· ${n.author_name || ''}</span></div>`).join('')
     : `<div class="state">${L('Sin notas aún.', 'No notes yet.')}</div>`);
   const sendBtn = cell.querySelector('.mgmt-comment-send');
@@ -328,6 +339,7 @@ async function toggleTeamNotes(id, containerSel = '#deals-table') {
     sendBtn.disabled = true;
     const { error } = await db.from('notes').insert({
       entity_type: 'pipeline', entity_id: id, author_id: me.id, text_original: text,
+      text_en: EN ? text : await translateNote(text), // viewers already write in English
     });
     sendBtn.disabled = false;
     if (!error) { tr.classList.add('hidden'); toggleTeamNotes(id, containerSel); }
@@ -504,6 +516,7 @@ $('n-add').addEventListener('click', async () => {
   btn.disabled = true; msg.textContent = '';
   const { error } = await db.from('notes').insert({
     entity_type: 'pipeline', entity_id: id, author_id: me.id, text_original: text,
+    text_en: await translateNote(text),
   });
   btn.disabled = false;
   if (error) { msg.textContent = error.message; return; }
@@ -538,9 +551,11 @@ $('edit-save').addEventListener('click', async () => {
     || sigDate !== (prev.deposit_signal_date ?? null) || sigType !== (prev.deposit_signal_type ?? null);
   if (sigAmt && sigChanged) {
     const tipo = sigType === 'new_ftd' ? 'Nuevo depósito (FTD)' : sigType === 'redeposit' ? 'Re-depósito' : 'Depósito';
+    const tipoEn = sigType === 'new_ftd' ? 'New deposit (FTD)' : sigType === 'redeposit' ? 'Re-deposit' : 'Deposit';
     await db.from('notes').insert({
       entity_type: 'pipeline', entity_id: id, author_id: me.id,
       text_original: `💰 Señal de depósito: ${money(sigAmt)} — ${tipo}${sigDate ? ` — esperado para ${sigDate}` : ''}`,
+      text_en: `💰 Deposit signal: ${money(sigAmt)} — ${tipoEn}${sigDate ? ` — expected for ${sigDate}` : ''}`,
     });
   }
   $('edit-modal').classList.add('hidden'); loadPipeline();
