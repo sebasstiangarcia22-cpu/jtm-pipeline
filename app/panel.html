@@ -25,6 +25,14 @@
     .msg { font-size:13px; margin-top:12px; text-align:center; min-height:18px; }
     .msg.err { color:#f85149; }
     .msg.ok { color:var(--green); }
+    /* Market news bar */
+    .news-bar { display:flex; align-items:center; gap:0; padding:8px 16px; background:#10151c;
+                border-bottom:1px solid var(--line); overflow-x:auto; white-space:nowrap; font-size:12.5px; scrollbar-width:none; }
+    .news-bar::-webkit-scrollbar { display:none; }
+    .news-label { color:var(--blue); font-weight:700; margin-right:12px; flex-shrink:0; }
+    .news-item { color:var(--mut); text-decoration:none; flex-shrink:0; }
+    .news-item:hover { color:var(--txt); }
+    .news-sep { color:#2a323d; margin:0 12px; flex-shrink:0; }
     /* Header */
     header { padding:16px 24px; border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between; }
     header img { height:30px; }
@@ -93,6 +101,7 @@
         <button class="logout" id="logout">Salir</button>
       </div>
     </header>
+    <div id="news-bar" class="news-bar" style="display:none"></div>
     <div class="wrap">
       <!-- Admin tabs (gm/admin/viewer) -->
       <div id="admin-tabs" class="hidden" style="display:flex;gap:6px;margin-bottom:20px">

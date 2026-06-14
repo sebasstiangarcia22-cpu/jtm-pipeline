@@ -67,6 +67,7 @@ async function showPanel() {
   $('pwd-l2').textContent = L('Repítela', 'Repeat it');
   $('pwd-save').textContent = L('Guardar', 'Save');
   if (isMgmt) loadPipelinePotential();
+  fetchNews();
   showTab(isViewer ? 'tab-dash' : 'tab-mine');
   if (isViewer) return;
   await loadPipeline();          // fills rowsById (prospect names for the summary)
@@ -349,6 +350,20 @@ async function toggleTeamNotes(id, containerSel = '#deals-table') {
     sendBtn.disabled = false;
     if (!error) { tr.classList.add('hidden'); toggleTeamNotes(id, containerSel); }
   });
+}
+
+// ---- Market news bar: reads same-origin news.json (refreshed by a GitHub
+// Action from the economic calendar). Hides gracefully on any failure. ----
+async function fetchNews() {
+  const bar = $('news-bar'); if (!bar) return;
+  try {
+    const j = await fetch('news.json?t=' + Math.floor(Date.now() / 3.6e6), { signal: AbortSignal.timeout(5000) }).then((r) => r.json());
+    const items = j.items || [];
+    if (!items.length) { bar.style.display = 'none'; return; }
+    bar.innerHTML = `<span class="news-label">📅 ${L('Mercado hoy', 'Market today')}</span>`
+      + items.map((i) => `<span class="news-item">${i.title}${i.meta ? ` <span style="color:#5a6573">${i.meta}</span>` : ''}</span>`).join('<span class="news-sep">•</span>');
+    bar.style.display = 'flex';
+  } catch { bar.style.display = 'none'; }
 }
 
 // ---- Daily report ----
