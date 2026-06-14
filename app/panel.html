@@ -33,6 +33,13 @@
     .news-item { color:var(--mut); text-decoration:none; flex-shrink:0; }
     .news-item:hover { color:var(--txt); }
     .news-sep { color:#2a323d; margin:0 12px; flex-shrink:0; }
+    .news-note { display:flex; align-items:center; gap:8px; padding:9px 16px; background:#15233a;
+                 border-bottom:1px solid var(--line); font-size:13px; color:var(--txt); }
+    .news-note .nn-text { flex:1; }
+    .news-note .nn-by { color:var(--mut); font-size:11px; }
+    .news-note .nn-edit { background:none; border:1px solid var(--line); color:var(--blue); cursor:pointer;
+                          border-radius:6px; padding:3px 9px; font-size:12px; flex-shrink:0; }
+    .news-note .nn-edit:hover { border-color:var(--blue); }
     /* Header */
     header { padding:16px 24px; border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between; }
     header img { height:30px; }
@@ -101,6 +108,7 @@
         <button class="logout" id="logout">Salir</button>
       </div>
     </header>
+    <div id="news-note" class="news-note" style="display:none"></div>
     <div id="news-bar" class="news-bar" style="display:none"></div>
     <div class="wrap">
       <!-- Admin tabs (gm/admin/viewer) -->
@@ -251,6 +259,20 @@
           </div>
           <div class="full" id="n-list" style="max-height:220px;overflow:auto"></div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Market note (management) -->
+  <div id="note-modal" class="modal hidden">
+    <div class="modal-card" style="max-width:480px">
+      <div class="modal-head"><strong id="note-title">📌 Nota de mercado del día</strong><button class="x" id="note-close">✕</button></div>
+      <div class="mform" style="grid-template-columns:1fr">
+        <div><label id="note-l1">Mensaje para el equipo (qué pasa hoy + qué hacer)</label>
+          <textarea id="note-text" rows="3" placeholder="Ej: Hoy decisión de la Fed 1pm → volatilidad en oro/USD. Buen día para llamar clientes." style="width:100%;padding:10px 12px;background:#0e1116;border:1px solid var(--line);border-radius:8px;color:var(--txt);font-size:14px;outline:none;resize:vertical;font-family:inherit"></textarea></div>
+        <div><button class="btn-add" id="note-save">Publicar</button>
+          <button class="logout" id="note-clear" style="margin-left:8px">Borrar nota</button>
+          <span class="msg" id="note-msg" style="margin-left:10px"></span></div>
       </div>
     </div>
   </div>

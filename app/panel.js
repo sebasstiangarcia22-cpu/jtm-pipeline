@@ -14,6 +14,7 @@ const STATUSES = {
 };
 let me = null;
 let rowsById = {};
+let isMgmtGlobal = false;
 let EN = false; // viewers (Nishil/management) get English UI
 const L = (es, en) => (EN ? en : es);
 
@@ -66,8 +67,14 @@ async function showPanel() {
   $('pwd-l1').textContent = L('Nueva contraseña (mínimo 8 caracteres)', 'New password (at least 8 characters)');
   $('pwd-l2').textContent = L('Repítela', 'Repeat it');
   $('pwd-save').textContent = L('Guardar', 'Save');
+  isMgmtGlobal = isMgmt;
+  $('note-title').textContent = L('📌 Nota de mercado del día', '📌 Market note of the day');
+  $('note-l1').textContent = L('Mensaje para el equipo (qué pasa hoy + qué hacer)', 'Message for the team (what\'s happening + what to do)');
+  $('note-save').textContent = L('Publicar', 'Publish');
+  $('note-clear').textContent = L('Borrar nota', 'Clear note');
   if (isMgmt) loadPipelinePotential();
   fetchNews();
+  loadMarketNote();
   showTab(isViewer ? 'tab-dash' : 'tab-mine');
   if (isViewer) return;
   await loadPipeline();          // fills rowsById (prospect names for the summary)
@@ -352,6 +359,28 @@ async function toggleTeamNotes(id, containerSel = '#deals-table') {
   });
 }
 
+// ---- Manager market note (editable by gm/admin/viewer, read by all) ----
+async function loadMarketNote() {
+  const el = $('news-note'); if (!el) return;
+  let n = null;
+  try { const { data } = await db.rpc('get_market_note'); n = data && data[0]; } catch {}
+  const text = n && n.note ? (EN ? (n.note_en || n.note) : n.note) : '';
+  if (!text && !isMgmtGlobal) { el.style.display = 'none'; return; }
+  if (!text) {
+    el.innerHTML = `<span class="nn-text" style="color:var(--mut)">📌 ${L('Sin nota de mercado hoy', 'No market note today')}</span>`
+      + `<button class="nn-edit" id="nn-edit">✏️ ${L('Agregar', 'Add')}</button>`;
+  } else {
+    el.innerHTML = `<span class="nn-text">📌 ${text}${n.updated_by ? ` <span class="nn-by">· ${n.updated_by}</span>` : ''}</span>`
+      + (isMgmtGlobal ? `<button class="nn-edit" id="nn-edit">✏️ ${L('Editar', 'Edit')}</button>` : '');
+  }
+  el.style.display = 'flex';
+  const eb = document.getElementById('nn-edit');
+  if (eb) eb.addEventListener('click', () => {
+    $('note-text').value = (n && n.note) || ''; $('note-msg').textContent = '';
+    $('note-modal').classList.remove('hidden');
+  });
+}
+
 // ---- Market news bar: today's high-impact economic events (Forex Factory
 // calendar, refreshed daily server-side into Supabase). Hides on any failure. ----
 async function fetchNews() {
@@ -491,6 +520,24 @@ $('logout').addEventListener('click', async () => { await db.auth.signOut(); sho
 $('help-btn').addEventListener('click', () => $('help-modal').classList.remove('hidden'));
 $('help-close').addEventListener('click', () => $('help-modal').classList.add('hidden'));
 $('help-modal').addEventListener('click', (e) => { if (e.target.id === 'help-modal') $('help-modal').classList.add('hidden'); });
+
+// Market note modal (management)
+$('note-close').addEventListener('click', () => $('note-modal').classList.add('hidden'));
+$('note-modal').addEventListener('click', (e) => { if (e.target.id === 'note-modal') $('note-modal').classList.add('hidden'); });
+$('note-save').addEventListener('click', async () => {
+  const text = $('note-text').value.trim(), msg = $('note-msg'), btn = $('note-save');
+  if (!text) { msg.className = 'msg err'; msg.textContent = L('Escribe algo.', 'Write something.'); return; }
+  btn.disabled = true; msg.className = 'msg'; msg.textContent = '…';
+  const en = EN ? text : await translateNote(text);
+  const { error } = await db.rpc('set_market_note', { p_note: text, p_note_en: en });
+  btn.disabled = false;
+  if (error) { msg.className = 'msg err'; msg.textContent = error.message; return; }
+  $('note-modal').classList.add('hidden'); loadMarketNote();
+});
+$('note-clear').addEventListener('click', async () => {
+  const { error } = await db.rpc('set_market_note', { p_note: null, p_note_en: null });
+  if (!error) { $('note-modal').classList.add('hidden'); loadMarketNote(); }
+});
 
 // Change password modal
 $('pwd-btn').addEventListener('click', () => {
