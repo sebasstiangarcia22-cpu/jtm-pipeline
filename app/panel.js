@@ -523,10 +523,13 @@ $('dr-form').addEventListener('submit', async (e) => {
   const msg = $('dr-msg'), btn = $('dr-send');
   btn.disabled = true; msg.textContent = '';
   const today = new Date().toLocaleDateString('sv-SE');
+  const summary = $('dr-summary').value.trim() || null;
+  const commit = $('dr-commit').value.trim() || null;
   const { error } = await db.from('daily_reports').upsert({
     agent_id: me.id, report_date: today,
-    activity_summary: $('dr-summary').value.trim() || null,
-    commitments: $('dr-commit').value.trim() || null,
+    activity_summary: summary, commitments: commit,
+    activity_summary_en: summary ? await translateNote(summary) : null,
+    commitments_en: commit ? await translateNote(commit) : null,
     submitted_at: new Date().toISOString(),
   }, { onConflict: 'agent_id,report_date' });
   btn.disabled = false;
