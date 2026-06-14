@@ -352,14 +352,13 @@ async function toggleTeamNotes(id, containerSel = '#deals-table') {
   });
 }
 
-// ---- Market news bar: reads same-origin news.json (refreshed by a GitHub
-// Action from the economic calendar). Hides gracefully on any failure. ----
+// ---- Market news bar: today's high-impact economic events (Forex Factory
+// calendar, refreshed daily server-side into Supabase). Hides on any failure. ----
 async function fetchNews() {
   const bar = $('news-bar'); if (!bar) return;
   try {
-    const j = await fetch('news.json?t=' + Math.floor(Date.now() / 3.6e6), { signal: AbortSignal.timeout(5000) }).then((r) => r.json());
-    const items = j.items || [];
-    if (!items.length) { bar.style.display = 'none'; return; }
+    const { data: items, error } = await db.rpc('public_market_today');
+    if (error || !items || !items.length) { bar.style.display = 'none'; return; }
     bar.innerHTML = `<span class="news-label">📅 ${L('Mercado hoy', 'Market today')}</span>`
       + items.map((i) => `<span class="news-item">${i.title}${i.meta ? ` <span style="color:#5a6573">${i.meta}</span>` : ''}</span>`).join('<span class="news-sep">•</span>');
     bar.style.display = 'flex';
