@@ -24,6 +24,7 @@
     .btn:hover { background:#2f7ae0; } .btn:disabled { opacity:.6; cursor:default; }
     .msg { font-size:13px; margin-top:12px; text-align:center; min-height:18px; }
     .msg.err { color:#f85149; }
+    .msg.ok { color:var(--green); }
     /* Header */
     header { padding:16px 24px; border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between; }
     header img { height:30px; }
@@ -88,6 +89,7 @@
         <span id="who-name"></span>
         <span class="badge" id="who-role"></span>
         <button class="logout" id="help-btn" title="Manual de uso">📖 Manual</button>
+        <button class="logout" id="pwd-btn" title="Cambiar contraseña">🔑 Contraseña</button>
         <button class="logout" id="logout">Salir</button>
       </div>
     </header>
@@ -240,6 +242,21 @@
           </div>
           <div class="full" id="n-list" style="max-height:220px;overflow:auto"></div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Change password -->
+  <div id="pwd-modal" class="modal hidden">
+    <div class="modal-card" style="max-width:380px">
+      <div class="modal-head"><strong id="pwd-title">🔑 Cambiar contraseña</strong><button class="x" id="pwd-close">✕</button></div>
+      <div class="mform" style="grid-template-columns:1fr">
+        <div><label id="pwd-l1">Nueva contraseña (mínimo 8 caracteres)</label>
+          <input id="pwd-new" type="password" autocomplete="new-password" /></div>
+        <div><label id="pwd-l2">Repítela</label>
+          <input id="pwd-confirm" type="password" autocomplete="new-password" /></div>
+        <div><button class="btn-add" id="pwd-save">Guardar</button>
+          <span class="msg" id="pwd-msg" style="margin-left:10px"></span></div>
       </div>
     </div>
   </div>

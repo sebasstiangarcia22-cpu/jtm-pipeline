@@ -61,6 +61,11 @@ async function showPanel() {
   $('help-title').textContent = L('📖 Manual del panel', '📖 Panel guide');
   $('help-es').classList.toggle('hidden', EN);
   $('help-en').classList.toggle('hidden', !EN);
+  $('pwd-btn').textContent = L('🔑 Contraseña', '🔑 Password');
+  $('pwd-title').textContent = L('🔑 Cambiar contraseña', '🔑 Change password');
+  $('pwd-l1').textContent = L('Nueva contraseña (mínimo 8 caracteres)', 'New password (at least 8 characters)');
+  $('pwd-l2').textContent = L('Repítela', 'Repeat it');
+  $('pwd-save').textContent = L('Guardar', 'Save');
   if (isMgmt) loadPipelinePotential();
   showTab(isViewer ? 'tab-dash' : 'tab-mine');
   if (isViewer) return;
@@ -472,6 +477,26 @@ $('logout').addEventListener('click', async () => { await db.auth.signOut(); sho
 $('help-btn').addEventListener('click', () => $('help-modal').classList.remove('hidden'));
 $('help-close').addEventListener('click', () => $('help-modal').classList.add('hidden'));
 $('help-modal').addEventListener('click', (e) => { if (e.target.id === 'help-modal') $('help-modal').classList.add('hidden'); });
+
+// Change password modal
+$('pwd-btn').addEventListener('click', () => {
+  $('pwd-new').value = ''; $('pwd-confirm').value = ''; $('pwd-msg').textContent = '';
+  $('pwd-modal').classList.remove('hidden');
+});
+$('pwd-close').addEventListener('click', () => $('pwd-modal').classList.add('hidden'));
+$('pwd-modal').addEventListener('click', (e) => { if (e.target.id === 'pwd-modal') $('pwd-modal').classList.add('hidden'); });
+$('pwd-save').addEventListener('click', async () => {
+  const p1 = $('pwd-new').value, p2 = $('pwd-confirm').value, msg = $('pwd-msg'), btn = $('pwd-save');
+  msg.className = 'msg err';
+  if (p1.length < 8) { msg.textContent = L('Mínimo 8 caracteres.', 'At least 8 characters.'); return; }
+  if (p1 !== p2) { msg.textContent = L('No coinciden.', 'Passwords do not match.'); return; }
+  btn.disabled = true; msg.className = 'msg'; msg.textContent = '…';
+  const { error } = await db.auth.updateUser({ password: p1 });
+  btn.disabled = false;
+  if (error) { msg.className = 'msg err'; msg.textContent = error.message; return; }
+  msg.className = 'msg ok'; msg.textContent = L('✓ Contraseña actualizada', '✓ Password updated');
+  setTimeout(() => $('pwd-modal').classList.add('hidden'), 1200);
+});
 $('add-toggle').addEventListener('click', () => $('add-form').classList.toggle('hidden'));
 
 $('add-form').addEventListener('submit', async (e) => {
