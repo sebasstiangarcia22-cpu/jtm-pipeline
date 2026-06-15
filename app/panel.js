@@ -45,10 +45,11 @@ async function showPanel() {
   const role = me?.role || 'bdm';
   const isViewer = role === 'viewer';
   const isMgmt = ['gm', 'admin', 'viewer'].includes(role);
+  const isLead = role === 'team_leader'; // sees own + direct reports (read-only)
   EN = isViewer; // English UI for viewers (Nishil/management)
   $('admin-tabs').classList.remove('hidden');
   $('tab-mine').classList.toggle('hidden', isViewer);
-  $('tab-team').textContent = isViewer ? 'Team' : (isMgmt ? 'Equipo' : 'Mi actividad');
+  $('tab-team').textContent = isViewer ? 'Team' : (isMgmt || isLead ? 'Equipo' : 'Mi actividad');
   $('tab-deals').textContent = L('Negocios', 'Deals');
   $('tab-deals').classList.toggle('hidden', !isMgmt);
   $('tab-dash').classList.toggle('hidden', !isMgmt);
@@ -286,10 +287,14 @@ $('day-next').addEventListener('click', () => { if (teamOffset < 0) { teamOffset
 async function loadTeam() {
   const day = dayStr(teamOffset);
   $('day-label').textContent = teamOffset === 0 ? L('Hoy', 'Today') : teamOffset === -1 ? L('Ayer', 'Yesterday') : day;
-  // Selected day's reports + who's missing
+  // Selected day's reports + who's missing. A team leader sees only their
+  // direct reports; management (gm/admin/viewer) sees the whole team.
+  let agentsQ = db.from('profiles').select('id, full_name, role').eq('active', true);
+  agentsQ = me.role === 'team_leader'
+    ? agentsQ.eq('reports_to', me.id)
+    : agentsQ.in('role', ['bdm', 'asm', 'team_leader', 'gm']);
   const [{ data: agents }, { data: reps }] = await Promise.all([
-    db.from('profiles').select('id, full_name, role').eq('active', true)
-      .in('role', ['bdm', 'asm', 'team_leader', 'gm']),
+    agentsQ,
     db.from('daily_reports').select('agent_id, activity_summary, commitments, submitted_at')
       .eq('report_date', day),
   ]);
