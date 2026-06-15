@@ -51,7 +51,9 @@ async function showPanel() {
   $('tab-mine').classList.toggle('hidden', isViewer);
   $('tab-team').textContent = isViewer ? 'Team' : (isMgmt || isLead ? 'Equipo' : 'Mi actividad');
   $('tab-deals').textContent = L('Negocios', 'Deals');
-  $('tab-deals').classList.toggle('hidden', !isMgmt);
+  // Leads get Negocios too (RLS scopes it to their own team), so they can
+  // open a deal and leave direction for their reports. No global Dashboard.
+  $('tab-deals').classList.toggle('hidden', !(isMgmt || isLead));
   $('tab-dash').classList.toggle('hidden', !isMgmt);
   $('help-mgmt').classList.toggle('hidden', !isMgmt);
   // Viewer statics in English
@@ -340,8 +342,9 @@ async function toggleTeamNotes(id, containerSel = '#deals-table') {
     .select('note_date, text_original, text_en, author_is_mgmt, author_name')
     .eq('entity_type', 'pipeline').eq('entity_id', id)
     .order('created_at', { ascending: false });
-  // Management (gm/admin/viewer) can drop a note/question right here
-  const isMgmt = ['gm', 'admin', 'viewer'].includes(me.role);
+  // Management (gm/admin/viewer) and team leads can drop a note/question here.
+  // RLS still restricts a lead to their own team's deals.
+  const isMgmt = ['gm', 'admin', 'viewer', 'team_leader'].includes(me.role);
   const commentBox = isMgmt ? `<div style="padding:8px 6px;border-bottom:1px solid var(--line);display:flex;gap:8px">
       <input class="mgmt-comment" placeholder="${L('💬 Deja una nota o pregunta al BDM…', '💬 Leave a note or question for the BDM…')}" style="flex:1;padding:8px 10px;background:#0e1116;border:1px solid var(--line);border-radius:8px;color:var(--txt);font-size:13px;outline:none" />
       <button class="btn-add mgmt-comment-send">${L('Enviar', 'Send')}</button></div>` : '';
