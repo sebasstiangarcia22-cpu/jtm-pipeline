@@ -1,115 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>JT Markets — LATAM Pipeline</title>
-  <style>
-    :root { --bg:#0e1116; --card:#161b22; --line:#222a35; --txt:#e6edf3; --mut:#8b949e;
-            --green:#2ea043; --orange:#d29922; --blue:#388bfd; }
-    * { box-sizing:border-box; }
-    body { margin:0; background:var(--bg); color:var(--txt);
-           font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
-    header { padding:20px 28px; border-bottom:1px solid var(--line);
-             display:flex; align-items:center; justify-content:space-between; }
-    header h1 { font-size:18px; margin:0; font-weight:600; }
-    header .sub { color:var(--mut); font-size:13px; margin-top:2px; }
-    .brand { display:flex; align-items:center; gap:14px; }
-    .brand .logo { height:34px; }
-    .wrap { padding:24px 28px; max-width:1100px; margin:0 auto; }
-    .section { margin-bottom:32px; }
-    .section h2 { font-size:14px; text-transform:uppercase; letter-spacing:.5px;
-                  color:var(--mut); margin:0 0 12px; }
-    table { width:100%; border-collapse:collapse; background:var(--card);
-            border:1px solid var(--line); border-radius:10px; overflow:hidden; }
-    th,td { text-align:left; padding:11px 14px; font-size:14px; border-bottom:1px solid var(--line); }
-    th { color:var(--mut); font-weight:600; font-size:12px; text-transform:uppercase; letter-spacing:.4px; }
-    tr:last-child td { border-bottom:none; }
-    td.num, th.num { text-align:right; font-variant-numeric:tabular-nums; }
-    .pos { color:var(--green); } .neg { color:#f85149; }
-    .num.gross { color:var(--blue); }
-    .badge { font-size:11px; padding:2px 8px; border-radius:20px; background:#21262d; color:var(--mut); }
-    .badge.former { background:#2d2418; color:var(--orange); }
-    .period-bar { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px; }
-    .period-btn { padding:5px 13px; border:1px solid var(--line); background:var(--card); border-radius:20px;
-                  font-size:12px; color:var(--mut); cursor:pointer; transition:all .12s; }
-    .period-btn:hover { color:var(--txt); border-color:var(--mut); }
-    .period-btn.active { background:var(--blue); color:#fff; border-color:var(--blue); }
-    .state { color:var(--mut); font-size:13px; padding:16px; }
-    .search { width:280px; padding:8px 12px; margin-bottom:12px; background:var(--card);
-              border:1px solid var(--line); border-radius:8px; color:var(--txt); font-size:13px; outline:none; }
-    .search:focus { border-color:var(--blue); }
-    .ftd-yes { color:var(--green); font-weight:700; }
-    #register { max-height:520px; overflow:auto; border-radius:10px; border:1px solid var(--line);
-                scrollbar-width:thin; scrollbar-color:#2a323d #0e1116; }
-    #register table { border:none; border-radius:0; margin:0; border-collapse:separate; border-spacing:0; overflow:visible; }
-    #register thead th { position:sticky; top:0; background:#10151c; z-index:2;
-                         box-shadow:inset 0 -1px 0 var(--line); }
-    #register::-webkit-scrollbar { width:11px; height:11px; }
-    #register::-webkit-scrollbar-track { background:#0e1116; border-radius:0 10px 10px 0; }
-    #register::-webkit-scrollbar-thumb { background:#2a323d; border-radius:8px; border:2px solid #0e1116; }
-    #register::-webkit-scrollbar-thumb:hover { background:#3a444f; }
-    .reg-note { font-size:12px; color:var(--mut); padding:10px 14px; }
-    footer { color:var(--mut); font-size:12px; text-align:center; padding:24px; }
-    /* KPI bar */
-    .kpi-bar { display:flex; border-bottom:1px solid var(--line); background:var(--card); }
-    .kpi { flex:1; text-align:center; padding:16px 10px; border-right:1px solid var(--line); }
-    .kpi:last-child { border-right:none; }
-    .kpi-val { font-size:22px; font-weight:800; font-variant-numeric:tabular-nums; }
-    .kpi-val.pos { color:var(--green); } .kpi-val.neg { color:#f85149; }
-    .kpi-lbl { font-size:10px; color:var(--mut); text-transform:uppercase; letter-spacing:.5px; margin-top:4px; }
-    /* Month cards */
-    .month-grid { display:flex; gap:10px; flex-wrap:wrap; }
-    .month-card { flex:1; min-width:120px; background:var(--card); border:1px solid var(--line);
-                  border-top:3px solid var(--line); border-radius:10px; padding:12px 14px; }
-    .month-card.current { border-top-color:var(--orange); }
-    .month-card.best { border-top-color:var(--green); }
-    .mc-label { font-size:10px; font-weight:700; color:var(--mut); text-transform:uppercase; letter-spacing:.5px; }
-    .mc-amount { font-size:19px; font-weight:800; margin:5px 0 3px; font-variant-numeric:tabular-nums; }
-    .mc-amount.pos { color:var(--green); } .mc-amount.neg { color:#f85149; }
-    .mc-meta { font-size:11px; color:var(--mut); }
-    .mc-gross { font-size:14px; font-weight:700; color:var(--blue); margin-top:6px; font-variant-numeric:tabular-nums; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>JT Markets — LATAM Pipeline</title>
+<meta http-equiv="refresh" content="0; url=./panel.html">
+<style>
+  body { margin:0; background:#0e1116; color:#8b949e;
+         font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+         display:flex; min-height:100vh; align-items:center; justify-content:center; }
+  a { color:#388bfd; }
+</style>
 </head>
 <body>
-  <header>
-    <div class="brand">
-      <img src="logo.png" alt="JT Markets" class="logo" onerror="this.style.display='none'" />
-      <div>
-        <h1>LATAM Pipeline</h1>
-        <div class="sub">Live from database · production view</div>
-      </div>
-    </div>
-    <div id="status" class="badge">connecting…</div>
-  </header>
-
-  <div class="kpi-bar" id="kpis"></div>
-
-  <div class="wrap">
-    <div class="section">
-      <h2>By Month</h2>
-      <div id="months" class="month-grid"><div class="state">Loading…</div></div>
-    </div>
-    <div class="section">
-      <h2>Rankings</h2>
-      <div class="period-bar" id="period-bar"></div>
-      <div id="bdm"><div class="state">Loading…</div></div>
-    </div>
-    <div class="section">
-      <h2>Top IBs</h2>
-      <div id="ib"><div class="state">Loading…</div></div>
-    </div>
-    <div class="section">
-      <h2>Deposit Register</h2>
-      <input class="search" id="reg-search" placeholder="Search client, BDM, source…" autocomplete="off" />
-      <div id="register"><div class="state">Loading…</div></div>
-    </div>
-  </div>
-
-  <footer>JT Markets LATAM · internal pipeline dashboard</footer>
-
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="config.js"></script>
-  <script src="app.js"></script>
+  <p>Private dashboard. Redirecting to sign in… If nothing happens, <a href="./panel.html">click here</a>.</p>
+  <script>window.location.replace('./panel.html');</script>
 </body>
 </html>

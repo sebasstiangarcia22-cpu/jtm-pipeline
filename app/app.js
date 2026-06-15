@@ -3,6 +3,8 @@
 (() => {
 const cfg = window.JTM_CONFIG || {};
 const statusEl = document.getElementById('status'); // absent on panel.html
+const db = (cfg.SUPABASE_URL && !cfg.SUPABASE_URL.includes('YOUR-PROJECT'))
+  ? supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY) : null;
 
 const money = (n) => {
   const v = Number(n) || 0;
@@ -24,8 +26,6 @@ async function load() {
     document.getElementById('bdm').innerHTML = '<div class="state">Set URL/key in config.js.</div>';
     return;
   }
-  const db = supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
-
   // ---- KPIs ----
   const { data: kpi } = await db.rpc('public_kpis');
   if (kpi && kpi[0]) {
@@ -126,5 +126,14 @@ async function load() {
   document.getElementById('reg-search').addEventListener('input', (e) => renderReg(e.target.value));
 }
 
-load().catch((e) => { if(statusEl)statusEl.textContent = 'error'; console.error(e); });
+// The data RPCs now require an authenticated session (no anonymous access).
+// Load the dashboard only once we have a session — on the restored session
+// (INITIAL_SESSION) or on sign-in. On the login screen it stays idle.
+let dashLoaded = false;
+if (db) db.auth.onAuthStateChange((_event, session) => {
+  if (session && !dashLoaded) {
+    dashLoaded = true;
+    setTimeout(() => load().catch((e) => { if (statusEl) statusEl.textContent = 'error'; console.error(e); }), 0);
+  }
+});
 })();

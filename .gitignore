@@ -1,1 +1,8 @@
 .claude/
+.DS_Store
+
+# Internal design doc — contains commission detail, must stay out of the public repo
+DISENO-SISTEMA.md
+
+# Static deposit exports — never publish raw data
+data/
