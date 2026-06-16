@@ -194,6 +194,7 @@ function renderDeals() {
   const subset = deals.filter((d) => dealCategory(d) === dealsSub);
   const sig = (d) => Number(d.deposit_signal_amount) || 0;
   const realOf = (d) => (d.client_login && realBy[d.client_login]) || 0;
+  const act = (d) => (lastNote[d.id] ? new Date(lastNote[d.id]).getTime() : 0);
   if (dealsSub === 'process') {
     // Closest to FTD first: active signal > stage rank > size
     subset.sort((a, b) => ((sig(b) > 0) - (sig(a) > 0))
@@ -208,6 +209,9 @@ function renderDeals() {
     subset.sort((a, b) => (Number(b.deal_size) || 0) - (Number(a.deal_size) || 0));
     $('deals-hint').textContent = L('Negocios perdidos o inactivos — fuera del funnel activo.', 'Lost or inactive deals — out of the active funnel.');
   }
+  // Primary order: most recent activity first (stable sort keeps the priority
+  // order above as tiebreak). Deals with no notes fall to the bottom.
+  subset.sort((a, b) => act(b) - act(a));
 
   if (!subset.length) { $('deals-table').innerHTML = `<div class="state">${L('Nada en esta categoría.', 'Nothing in this category.')}</div>`; return; }
 
