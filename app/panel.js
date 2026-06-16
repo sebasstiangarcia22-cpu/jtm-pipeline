@@ -93,6 +93,59 @@ function showTab(tabId) {
   });
   if (tabId === 'tab-team') loadTeam();
   if (tabId === 'tab-deals') loadDeals();
+  if (tabId === 'tab-dash') loadPending();
+}
+
+// ---- Pendiente asociar: deposits in our locations with no BDM (GM/Admin) ----
+let pendingBdms = null;
+async function loadPending() {
+  const section = $('pending-section');
+  if (!section) return;
+  if (!['gm', 'admin'].includes(me.role)) { section.classList.add('hidden'); return; }
+
+  const { data: pend, error } = await db.rpc('list_pending_clients');
+  if (error || !pend || !pend.length) { section.classList.add('hidden'); return; }
+  section.classList.remove('hidden');
+  $('pending-count').textContent = pend.length;
+
+  if (!pendingBdms) {
+    const { data } = await db.from('profiles').select('id, full_name')
+      .eq('active', true).in('role', ['bdm', 'asm', 'team_leader', 'gm']).order('full_name');
+    pendingBdms = data || [];
+  }
+  const opts = '<option value="">— BDM —</option>'
+    + pendingBdms.map((b) => `<option value="${b.id}">${b.full_name}</option>`).join('');
+  const bs = 'padding:5px 10px;border-radius:7px;border:1px solid var(--line);font-size:12px;cursor:pointer;background:var(--card);color:var(--txt)';
+
+  $('pending-box').innerHTML = pend.map((c) => `
+    <tr data-login="${c.login}" style="border-top:1px solid var(--line)">
+      <td style="padding:8px">${c.full_name}${c.country ? ` <span style="color:var(--mut);font-size:11px">· ${c.country}</span>` : ''}</td>
+      <td style="padding:8px;text-align:right">${money(c.deposited)}</td>
+      <td style="padding:8px;color:var(--mut)">${c.last_deposit || '—'}</td>
+      <td style="padding:8px;white-space:nowrap">
+        <select class="pend-bdm" style="${bs};margin-right:6px">${opts}</select>
+        <button class="pend-assign" style="${bs};border-color:var(--blue);color:var(--blue)">Asignar</button>
+        <button class="pend-remove" style="${bs};border-color:#f85149;color:#f85149;margin-left:4px">Quitar</button>
+      </td>
+    </tr>`).join('');
+
+  $('pending-box').querySelectorAll('.pend-assign').forEach((btn) => btn.addEventListener('click', async (e) => {
+    const tr = e.target.closest('tr');
+    const bdm = tr.querySelector('.pend-bdm').value;
+    if (!bdm) { alert('Elige un BDM primero.'); return; }
+    btn.disabled = true;
+    const { error: er } = await db.rpc('assign_pending_client', { p_login: tr.dataset.login, p_bdm: bdm });
+    if (er) { alert(er.message); btn.disabled = false; return; }
+    loadPending();
+  }));
+  $('pending-box').querySelectorAll('.pend-remove').forEach((btn) => btn.addEventListener('click', async (e) => {
+    const tr = e.target.closest('tr');
+    if (!confirm('¿Quitar este cliente? Se excluye de los reportes y el importador no lo volverá a cargar.')) return;
+    btn.disabled = true;
+    const { error: er } = await db.rpc('exclude_client', { p_login: tr.dataset.login });
+    if (er) { alert(er.message); btn.disabled = false; return; }
+    loadPending();
+  }));
 }
 Object.keys(TABS).forEach((t) => $(t).addEventListener('click', () => showTab(t)));
 

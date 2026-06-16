@@ -168,6 +168,19 @@
       </div>
 
       <div id="view-dash" class="hidden">
+        <div id="pending-section" class="hidden" style="margin-bottom:22px;border:1px solid var(--line);border-radius:12px;background:var(--card);padding:14px 16px">
+          <h2 class="dash-h" style="margin:0 0 6px">⏳ Pendiente asociar (<span id="pending-count">0</span>)</h2>
+          <div style="color:var(--mut);font-size:13px;margin-bottom:10px">Depósitos de nuestras locaciones sin BDM. Asígnalos a alguien, o quítalos si no son nuestros.</div>
+          <table style="width:100%;border-collapse:collapse;font-size:14px">
+            <thead><tr style="text-align:left;color:var(--mut);font-size:12px">
+              <th style="padding:6px 8px">Cliente</th>
+              <th style="padding:6px 8px;text-align:right">Depositado</th>
+              <th style="padding:6px 8px">Último</th>
+              <th style="padding:6px 8px">Acción</th>
+            </tr></thead>
+            <tbody id="pending-box"></tbody>
+          </table>
+        </div>
         <div class="kpi-bar"><div id="kpis" style="display:contents"></div><div id="kpi-extra" style="display:contents"></div></div>
         <h2 class="dash-h">By Month</h2>
         <div id="months" class="month-grid"><div class="state">Loading…</div></div>
